@@ -1,7 +1,7 @@
 {
   "project": "ladder-lab",
   "tech": "node22-typescript-mcp-supabase",
-  "current_phase": "FASE_1",
+  "current_phase": "FASE_3",
   "phases": {
     "FASE_0": {
       "status": "done",
@@ -10,11 +10,20 @@
       "name": "Base (huecos de la plantilla)"
     },
     "FASE_1": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "implemented_not_deployed",
+      "tasks": 10,
       "total": 12,
       "name": "Registrar y no perder",
-      "protected": true
+      "protected": true,
+      "pending_owner": [
+        "1.11 despliegue (solo documentado)",
+        "1.12 puesta en uso con datos reales y congelar formato"
+      ],
+      "pending_real_credentials": [
+        "migracion contra Supabase real",
+        "repositorio contra la API real de Supabase",
+        "conexion por Tailscale desde el PC de juegos"
+      ]
     },
     "FASE_2": {
       "status": "blocked",
@@ -38,7 +47,7 @@
     }
   },
   "totals": {
-    "tasks_done": 8,
+    "tasks_done": 18,
     "tasks_total": 33
   },
   "meta": {

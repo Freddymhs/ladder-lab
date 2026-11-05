@@ -4,6 +4,21 @@
 **Dependencias**: FASE_0
 **Origen**: concepto, sección Fases, F1 ("registrar y no perder"). Herramientas: `crear_estampa`, `corregir_estampa`, `ver_estampa`, `listar_estampas`, `exportar`. Incluye esquema, versiones, formato JSON y despliegue.
 
+## Estado de ejecución (2026-11-05)
+
+**Implementada y probada en local. No desplegada y no usada con datos reales.** Lo que falta exige credenciales o datos de Freddy y está en el runbook: [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md).
+
+| Tarea                                 | Estado                                                                                                                       |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1.1 ADR del formato                   | hecha: ADR **aceptado por Freddy** (orden de la sesión); `archivada` añadido por F3, a confirmar                             |
+| 1.2 Esquema Zod                       | hecha (68 casos de esquema + fixtures publicados)                                                                            |
+| 1.3 Modelo de datos y migración       | hecha (`DECISION_MODELO_DATOS.md`); **aplicarla a Supabase la hace Freddy**                                                  |
+| 1.4 Capa de datos                     | hecha (doble en memoria + Supabase; mismo contrato en ambos)                                                                 |
+| 1.5 a 1.9 Las 5 herramientas          | hechas                                                                                                                       |
+| 1.10 Integración contra Postgres real | hecha contra contenedores desechables (Postgres de Supabase + PostgREST): 48 pruebas; contra un Supabase real: **pendiente** |
+| 1.11 Despliegue                       | **solo documentado** (ADR + runbook + borrador de workflow); no se desplegó nada                                             |
+| 1.12 Puesta en uso                    | **pendiente: la hace Freddy** con datos reales; el formato no está congelado                                                 |
+
 ## Protección de F1
 
 Esta fase es **cerrada**. Alcance = las 5 herramientas + esquema + versiones + formato JSON + despliegue, y nada más.
@@ -146,15 +161,15 @@ Esta fase es **cerrada**. Alcance = las 5 herramientas + esquema + versiones + f
 
 ## Criterios de Aceptacion
 
-- [ ] Las 5 herramientas existen, tienen tests y aparecen en `tools/list` desde Claude Code del PC de juegos.
-- [ ] Crear → corregir → ver deja dos versiones y la primera sigue intacta (probado contra Postgres real, 1.10).
-- [ ] Intentar borrar o modificar una versión desde SQL es rechazado por la base (probado en 1.10, con el caso rojo hecho a propósito).
-- [ ] Un campo desconocido o que no aplica se registra con `desconocido` / `no_aplica` y se exporta igual.
-- [ ] `exportar` con `incluirVersiones` devuelve todo lo necesario (ids y números de versión incluidos) para reconstruir los datos sin Supabase, validado contra el esquema; toda exportación lleva `id` en cada documento y todo `derivadaDe` se resuelve contra un `id` del mismo envoltorio.
-- [ ] El servidor responde 401 sin token (y con token inventado) y 200 con token correcto, medido desde el PC de juegos por Tailscale.
-- [ ] La imagen corre como no root, `.dockerignore` existe y el `.env` no está dentro de la imagen.
-- [ ] El formato v1 está marcado como congelado con fecha en el ADR.
-- [ ] `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test` pasan; `pnpm test:integration` pasa contra la base de pruebas.
+- [x] Las 5 herramientas existen, tienen tests y aparecen en `tools/list` (comprobado por HTTP contra la imagen Docker en local). Desde Claude Code del PC de juegos por Tailscale: **pendiente**.
+- [x] Crear → corregir → ver deja dos versiones y la primera sigue intacta (probado contra Postgres y PostgREST reales, 1.10).
+- [x] Intentar borrar o modificar una versión desde SQL es rechazado por la base (probado en 1.10; caso rojo hecho a propósito: sin el trigger, 4 pruebas fallan).
+- [x] Un campo desconocido o que no aplica se registra con `desconocido` / `no_aplica` y se exporta igual.
+- [x] `exportar` con `incluirVersiones` devuelve todo lo necesario (ids y números de versión incluidos) para reconstruir los datos sin Supabase, validado contra el esquema; toda exportación lleva `id` en cada documento y todo `derivadaDe` se resuelve contra un `id` del mismo envoltorio.
+- [ ] El servidor responde 401 sin token (y con token inventado) y 200 con token correcto, medido desde el PC de juegos por Tailscale. **Pendiente** (comprobado en local con curl y en contenedor; falta el Mac Mini).
+- [x] La imagen corre como no root, `.dockerignore` existe y el `.env` no está dentro de la imagen.
+- [ ] El formato v1 está marcado como congelado con fecha en el ADR. **Pendiente (1.12): exige datos reales de Freddy.**
+- [x] `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test` pasan; `pnpm test:integration` pasa contra la base de pruebas (contenedores desechables).
 
 ### Criterio de salida de F1 (abre F2)
 

@@ -1,7 +1,7 @@
 # DECISION: Formato JSON v1 de la estampa
 
 Fecha: 2026-11-05
-**Estado: revisado en sesión de control, pendiente de confirmación de Freddy.** Hasta que Freddy lo confirme no se escribe el esquema Zod (tarea 1.2). El formato **no está congelado**: se congela en la tarea 1.12, con los primeros datos reales.
+**Estado: aceptado por Freddy** (confirmación comunicada por orden en la sesión del 2026-11-05; sustituye a «revisado en sesión de control, pendiente de confirmación»). El esquema Zod ya está implementado a partir de este ADR (`src/domain/estampa/schema.ts`). El formato **no está congelado**: se congela en la tarea 1.12, con los primeros datos reales de Freddy (ver `docs/runbooks/PUESTA_EN_MARCHA.md`).
 
 ## Qué dice el concepto
 
@@ -130,8 +130,12 @@ Estado: **resuelto el 2026-11-05** por la opción 3 de las tres que este ADR pla
 
 `derivadaDe` es el id de otra estampa y la decisión anterior decía que la exportación normal no llevaba `id`: el vínculo quedaba apuntando a un id que ningún documento declara. Se resolvió haciendo que **los documentos exportados lleven siempre `id`**, y `derivadaDe` queda como referencia a ese id. Se descartó omitir `derivadaDe` en la exportación normal (el consumidor perdería el árbol) y dejarlo como referencia opaca (dato sin sentido por sí solo).
 
+## Ampliación por F3: campo `archivada` en la exportación
+
+Este ADR decía que la exportación incluye las estampas archivadas (para que ningún `derivadaDe` quede colgado), pero un documento exportado no decía si la estampa estaba archivada: al restaurar, todas volverían como visibles. Se añade el campo **`archivada: true`**, presente **solo** cuando la estampa está archivada y solo en documentos exportados (igual que `id`). Una estampa no archivada no lleva el campo. El esquema lo acepta únicamente como `true`. _(Ampliación mía, necesaria para que respaldar y restaurar sea una ida y vuelta fiel; a confirmar con Freddy.)_
+
 ## Qué queda abierto
 
-- **Confirmación de Freddy** de este ADR (estado de arriba).
-- El nombre `numeroVersion` (propuesta mía).
-- Que la exportación incluya estampas archivadas (deducción mía).
+- El nombre `numeroVersion` (propuesta mía; ya implementado, renombrar cuesta un cambio de esquema y de fixtures).
+- Que la exportación incluya estampas archivadas y el campo `archivada` (deducciones mías, implementadas).
+- Congelar el formato v1 con datos reales (tarea 1.12).

@@ -1,0 +1,54 @@
+{
+  "formato": "ladder-lab.export",
+  "version": 1,
+  "estampas": [
+    {
+      "formato": "ladder-lab.estampa",
+      "version": 1,
+      "id": "7d1c2f4e-0000-4000-8000-000000000001",
+      "juego": {
+        "nombre": "Counter-Strike",
+        "genero": "FPS",
+        "fecha": "2025-06-01"
+      },
+      "sistema": {
+        "mouse": "Marca Modelo",
+        "dpi": 450,
+        "polling": 1000,
+        "resolucion": "1920x1080",
+        "hz": 240,
+        "posicionWindows": 6,
+        "aceleracionWindows": "apagada"
+      },
+      "enJuego": { "sensibilidad": 1.8, "rawInput": "encendido" },
+      "resultado": {
+        "rango": "Global",
+        "certeza": "medido",
+        "matchPerfecto": true
+      }
+    },
+    {
+      "formato": "ladder-lab.estampa",
+      "version": 1,
+      "id": "7d1c2f4e-0000-4000-8000-000000000002",
+      "derivadaDe": "7d1c2f4e-0000-4000-8000-000000000001",
+      "archivada": true,
+      "juego": {
+        "nombre": "StarCraft II",
+        "genero": "RTS",
+        "etapa": "Temporada 3"
+      },
+      "sistema": {
+        "mouse": "Marca Modelo",
+        "dpi": "desconocido",
+        "polling": 1000,
+        "resolucion": "2560x1440",
+        "hz": 144,
+        "posicionWindows": 6,
+        "aceleracionWindows": "apagada"
+      },
+      "enJuego": { "sensibilidad": "no_aplica", "rawInput": "no_aplica" },
+      "resultado": { "rango": "Diamante", "certeza": "estimado" }
+    }
+  ]
+}

@@ -12,7 +12,9 @@
       "@tools/*": ["src/tools/*"],
       "@resources/*": ["src/resources/*"],
       "@prompts/*": ["src/prompts/*"],
-      "@http/*": ["src/http/*"]
+      "@http/*": ["src/http/*"],
+      "@domain/*": ["src/domain/*"],
+      "@data/*": ["src/data/*"]
     },
     "strict": true,
     "esModuleInterop": true,

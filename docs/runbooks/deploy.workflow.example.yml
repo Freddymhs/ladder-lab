@@ -1,0 +1,47 @@
+# BORRADOR — no está en .github/workflows a propósito.
+# Copiarlo a .github/workflows/deploy.yml SOLO cuando Freddy confirme repositorio,
+# runner y entorno (docs/decisions/DECISION_DEPLOY.md). Con ese archivo activo,
+# el primer push a main desplegaría en el Mac Mini.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    # Solo si el CI pasó.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted, macOS]
+    env:
+      IMAGEN: ladder-lab:local
+      CONTENEDOR: ladder-lab
+      # Archivo de entorno en el Mac, fuera del repo. Contiene el token y la clave de servicio.
+      ARCHIVO_ENTORNO: ${{ vars.LADDER_LAB_ENV_FILE }}
+      # IP de Tailscale del Mac Mini donde se publica el puerto.
+      IP_TAILSCALE: ${{ vars.LADDER_LAB_TAILSCALE_IP }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construir la imagen
+        run: docker build -t "$IMAGEN" .
+
+      - name: Reemplazar el contenedor
+        run: |
+          docker rm -f "$CONTENEDOR" || true
+          docker run -d --name "$CONTENEDOR" --restart unless-stopped \
+            -p "${IP_TAILSCALE}:3000:3000" \
+            --env-file "$ARCHIVO_ENTORNO" \
+            "$IMAGEN"
+
+      - name: Esperar a que esté sano
+        run: |
+          for _ in $(seq 1 30); do
+            estado="$(docker inspect -f '{{.State.Health.Status}}' "$CONTENEDOR")"
+            [ "$estado" = "healthy" ] && exit 0
+            sleep 2
+          done
+          docker logs "$CONTENEDOR" | tail -20
+          exit 1

@@ -49,6 +49,7 @@ flowchart TB
         est[(estampas)]
         ver[(estampa_versiones<br/>inmutables: triggers)]
         rpc["funciones RPC atómicas<br/>crear_estampa, corregir_estampa"]
+        vistas["vistas security_invoker<br/>estampas_vigentes, estampas_historial"]
     end
 
     cc --> http --> mcp --> tools --> dom
@@ -57,6 +58,9 @@ flowchart TB
     repo --> rpc
     rpc --> est
     rpc --> ver
+    repo --> vistas
+    vistas --> est
+    vistas --> ver
     cfg -.-> http
     cfg -.-> repo
 ```

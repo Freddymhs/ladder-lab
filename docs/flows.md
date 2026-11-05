@@ -4,7 +4,7 @@
 > Llenar cada flujo después de probarlo. Útil como guía para `/tools:testing:run-browser-testing`.
 > Aquí no hay interfaz web: el «usuario» es Freddy hablando con Claude Code en el PC de juegos, y los pasos son llamadas a herramientas MCP.
 >
-> Última actualización: 2026-11-05 (plantilla generada; todo por llenar)
+> Última actualización: 2026-11-05 (flujos de F1 llenados con lo verificado automáticamente; cada flujo dice qué falta contra el servidor real)
 
 ---
 
@@ -23,19 +23,25 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Servidor desplegado, token generado y proyecto Supabase con la migración aplicada (runbook, secciones 1 a 6)
+- Tailscale activo en el PC de juegos
 
 **Pasos:**
 
-1. (por llenar)
+1. `claude mcp add --transport http --scope user ladder-lab http://<host-tailscale>:3000/mcp --header "Authorization: Bearer <TOKEN>"`
+2. Abrir Claude Code y ejecutar `/mcp`
 
 **Resultado esperado:**
 
-- (por llenar)
+- ladder-lab aparece conectado
+- Se listan 5 herramientas: crear_estampa, corregir_estampa, ver_estampa, listar_estampas, exportar (más las de F2 y F3 cuando estén desplegadas)
 
 **Casos borde:**
 
-- (por llenar)
+- Sin Tailscale activo: no hay respuesta (esperado)
+- Token mal copiado: el servidor responde 401
+
+**Verificación:** tools/list y conexión con el cliente del SDK por HTTP real, con pruebas automáticas (src/http/**tests**, src/tools/**tests**). contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -43,19 +49,25 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Servidor HTTP en marcha
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir `POST /mcp` sin cabecera Authorization
+2. Repetir con `Authorization: Bearer basura`
+3. Repetir con un token de otra longitud
 
 **Resultado esperado:**
 
-- (por llenar)
+- Las tres dan 401 con `WWW-Authenticate: Bearer` y sin ningún detalle
+- El log registra el rechazo pero nunca el token
 
 **Casos borde:**
 
-- (por llenar)
+- `GET /mcp` sin token también da 401 (no 405): sin token no se revela nada
+- `/healthz` responde 200 sin token y sin datos
+
+**Verificación:** 12 casos de auth y 6 de HTTP en pruebas automáticas, con el caso rojo hecho a propósito (isAuthorized devolviendo siempre true). Contra el servidor corriendo en contenedor local: 401 y 200 comprobados con curl. Contra el Mac Mini: pendiente.
 
 ---
 
@@ -63,19 +75,23 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Cliente ya registrado
 
 **Pasos:**
 
-1. (por llenar)
+1. Reiniciar el contenedor (`docker restart ladder-lab`)
+2. Ejecutar cualquier herramienta desde Claude Code
 
 **Resultado esperado:**
 
-- (por llenar)
+- Funciona sin volver a registrar nada: el servidor es sin estado (DECISION_TRANSPORTE_HTTP.md)
 
 **Casos borde:**
 
-- (por llenar)
+- Dos clientes conectados a la vez funcionan
+- Un reinicio no pierde datos: viven en Supabase
+
+**Verificación:** dos clientes simultáneos y reconexión tras cerrar otro, con el cliente real del SDK sobre HTTP real. Reinicio del contenedor en el Mac Mini: pendiente.
 
 ---
 
@@ -85,19 +101,22 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Servidor conectado
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir a Claude que registre una estampa con todos los datos (juego, género, etapa o fecha, mouse en un solo texto, DPI, polling, resolución, Hz, posición y aceleración de Windows, sensibilidad, raw input, rango, certeza)
 
 **Resultado esperado:**
 
-- (por llenar)
+- Responde "Estampa creada." con el id, versión 1 de 1 y la estampa completa
 
 **Casos borde:**
 
-- (por llenar)
+- Mouse es un solo texto con marca y modelo (no dos campos)
+- Con una fecha inexistente (2025-02-30) se rechaza
+
+**Verificación:** herramienta, esquema y contrato del repositorio (doble en memoria y Supabase vía PostgREST real). contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -105,19 +124,24 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Servidor conectado
 
 **Pasos:**
 
-1. (por llenar)
+1. Registrar una estampa donde el DPI no se recuerda y el juego (RTS) no tiene sensibilidad ni raw input
 
 **Resultado esperado:**
 
-- (por llenar)
+- Se guarda con `"desconocido"` en el DPI y `"no_aplica"` en sensibilidad y rawInput
+- Un campo opcional no registrado simplemente no aparece
 
 **Casos borde:**
 
-- (por llenar)
+- `desconocido` se acepta en los obligatorios salvo nombre del juego, género y certeza
+- `no_aplica` solo en sensibilidad y rawInput; en otro campo se rechaza
+- Nunca `null`
+
+**Verificación:** 68 casos de esquema (cada campo con desconocido, no_aplica y rechazo donde no corresponde) y contrato del repositorio. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -125,19 +149,23 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Servidor conectado
 
 **Pasos:**
 
-1. (por llenar)
+1. Intentar registrar con género `MOBA`, sin etapa ni fecha, o con una clave sobrante como `juegoDelLogro`
 
 **Resultado esperado:**
 
-- (por llenar)
+- Se rechaza con un mensaje que dice qué campo falla
+- No se guarda nada
 
 **Casos borde:**
 
-- (por llenar)
+- Género `desconocido` se rechaza (solo FPS o RTS)
+- Sin etapa ni fecha: "Indica al menos la etapa o la fecha"
+
+**Verificación:** pruebas de herramienta con repositorio vacío tras cada rechazo. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -145,19 +173,24 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa del juego
 
 **Pasos:**
 
-1. (por llenar)
+1. Registrar la configuración nueva con `crear_estampa` (no con `corregir_estampa`)
+2. Opcionalmente, indicar `derivadaDe` con el id de la estampa de la que parte
 
 **Resultado esperado:**
 
-- (por llenar)
+- Hay dos estampas independientes; la primera no cambia
+- `derivadaDe` apunta a una estampa existente (puede ser de otro juego)
 
 **Casos borde:**
 
-- (por llenar)
+- `derivadaDe` a un id que no existe: se rechaza
+- La descripción de `crear_estampa` advierte que otra etapa es OTRA estampa
+
+**Verificación:** pruebas de herramienta y contrato (derivadaDe existente, inexistente y de otro juego). contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -167,19 +200,25 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir a Claude que corrija un dato (p. ej. el DPI)
+2. Pedir `ver_estampa` y luego `exportar` con versiones
 
 **Resultado esperado:**
 
-- (por llenar)
+- Responde que ahora va en la versión 2 y que la versión 1 se conserva
+- La exportación con versiones trae las dos
 
 **Casos borde:**
 
-- (por llenar)
+- Solo se envían los campos que cambian
+- No se puede quitar un campo opcional ya registrado
+- Si otra sesión corrigió entre tanto, falla en vez de pisar (conflicto de versión)
+
+**Verificación:** pruebas de herramienta, contrato y SQL real: la versión 1 queda intacta y la base rechaza UPDATE/DELETE. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -187,19 +226,22 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa
 
 **Pasos:**
 
-1. (por llenar)
+1. Corregir con el mismo valor que ya tiene, o con `cambios` vacío
 
 **Resultado esperado:**
 
-- (por llenar)
+- Se rechaza: "no cambia ningún dato"
+- No se crea una versión nueva
 
 **Casos borde:**
 
-- (por llenar)
+- Un cambio que deja la estampa inválida también se rechaza sin tocar nada
+
+**Verificación:** pruebas de herramienta. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -209,19 +251,24 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir `ver_estampa` con el id
 
 **Resultado esperado:**
 
-- (por llenar)
+- Muestra la versión vigente, su número y cuántas versiones tiene
+- Indica si está archivada
 
 **Casos borde:**
 
-- (por llenar)
+- Id inexistente: "No existe una estampa con id …"
+- Id que no es uuid: se rechaza en la entrada
+- Las versiones anteriores se ven con `historial_versiones` o en `exportar`
+
+**Verificación:** pruebas de herramienta y contrato. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -229,19 +276,25 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existen estampas de varios juegos
 
 **Pasos:**
 
-1. (por llenar)
+1. `listar_estampas` sin filtros
+2. Repetir con `juego` y con `genero`
 
 **Resultado esperado:**
 
-- (por llenar)
+- Resumen compacto, de la más reciente a la más antigua por fecha; las sin fecha al final
+- El filtro por juego no distingue mayúsculas
 
 **Casos borde:**
 
-- (por llenar)
+- Lista vacía: no es un error
+- Paginación con `limite` y `desplazamiento`, y `hayMas` avisa si hay otra página
+- Un nombre con % o \_ no actúa como patrón
+
+**Verificación:** pruebas de herramienta y contrato, incluido el orden y la paginación contra PostgREST real. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -251,19 +304,25 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existen estampas
 
 **Pasos:**
 
-1. (por llenar)
+1. `exportar` sin parámetros
 
 **Resultado esperado:**
 
-- (por llenar)
+- Un envoltorio `ladder-lab.export` versión 1 con un arreglo de documentos
+- Cada documento lleva su `id`, también sin versiones
+- Cada `derivadaDe` se resuelve contra un `id` del mismo envoltorio
 
 **Casos borde:**
 
-- (por llenar)
+- Base vacía: envoltorio con arreglo vacío
+- Incluye las estampas archivadas, marcadas con `archivada: true`
+- Es el JSON que consume el convertidor
+
+**Verificación:** contrato contra el fixture publicado docs/formato/ejemplos/export-vigentes.json. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -271,19 +330,23 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa con al menos una corrección
 
 **Pasos:**
 
-1. (por llenar)
+1. `exportar` con `incluirVersiones: true`
 
 **Resultado esperado:**
 
-- (por llenar)
+- La estampa aparece una vez por versión, cada una con `numeroVersion`
+- Con esto se puede reconstruir todo sin la base
 
 **Casos borde:**
 
-- (por llenar)
+- Sin `incluirVersiones` no aparece `numeroVersion`
+- Con más de 500 estampas se pide a la base por páginas
+
+**Verificación:** contrato contra docs/formato/ejemplos/export-con-versiones.json y paginación de 520 estampas contra PostgREST real. contra el servidor desplegado y el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -291,19 +354,24 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir a Claude que borre una estampa
+2. Intentar `delete` o `update` directo por SQL sobre las tablas
 
 **Resultado esperado:**
 
-- (por llenar)
+- No existe ninguna herramienta que borre: Claude no puede hacerlo
+- Por SQL, la base rechaza con LL010 (UPDATE, DELETE y TRUNCATE de versiones; DELETE y TRUNCATE de estampas)
 
 **Casos borde:**
 
-- (por llenar)
+- `service_role` no tiene permiso de DELETE ni TRUNCATE
+- Un superusuario podría quitar los triggers: la protección es contra accidentes y errores de la aplicación
+
+**Verificación:** SQL real contra Postgres y contra la imagen oficial de Supabase, con el caso rojo hecho a propósito (migración sin el trigger: 4 pruebas fallan). Contra el proyecto Supabase real: pendiente.
 
 ---
 

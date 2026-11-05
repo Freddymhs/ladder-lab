@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import pino from 'pino';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { SERVER_NAME, SERVER_VERSION } from '@config/constants.js';
+import { InMemoryEstampaRepository } from '@data/index.js';
 import { createServer } from '../server.js';
 
 describe('createServer', () => {
   it('initializes and identifies itself as ladder-lab', async () => {
-    const server = createServer();
+    const server = createServer({
+      repository: new InMemoryEstampaRepository(),
+      logger: pino({ level: 'silent' }),
+    });
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     await server.connect(serverTransport);

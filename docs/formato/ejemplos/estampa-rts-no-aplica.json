@@ -1,0 +1,27 @@
+{
+  "formato": "ladder-lab.estampa",
+  "version": 1,
+  "derivadaDe": "7d1c2f4e-0000-4000-8000-000000000001",
+  "juego": {
+    "nombre": "StarCraft II",
+    "genero": "RTS",
+    "etapa": "Temporada 3"
+  },
+  "sistema": {
+    "mouse": "Marca Modelo",
+    "dpi": "desconocido",
+    "polling": 1000,
+    "resolucion": "2560x1440",
+    "hz": 144,
+    "posicionWindows": 6,
+    "aceleracionWindows": "apagada",
+    "versionWindows": "Windows 11"
+  },
+  "enJuego": {
+    "sensibilidad": "no_aplica",
+    "rawInput": "no_aplica",
+    "markC": false
+  },
+  "resultado": { "rango": "Diamante", "certeza": "estimado" },
+  "notas": "Dato de DPI no recordado"
+}
