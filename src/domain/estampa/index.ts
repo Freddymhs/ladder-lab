@@ -6,3 +6,4 @@ export * from './merge.js';
 export * from './export.js';
 export * from './validar.js';
 export * from './import.js';
+export * from './diff.js';

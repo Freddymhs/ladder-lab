@@ -158,7 +158,14 @@ export class SupabaseEstampaRepository implements EstampaRepository {
   }
 
   async listar(filtro: FiltroListado): Promise<EstampaGuardada[]> {
-    const { juego, genero, incluirArchivadas, limite, desplazamiento } = filtro;
+    const {
+      juego,
+      genero,
+      incluirArchivadas,
+      soloMatchPerfecto,
+      limite,
+      desplazamiento,
+    } = filtro;
     const base = this.client.from(VISTA_VIGENTES).select(COLUMNAS);
     const porJuego =
       juego !== undefined ? base.ilike('juego', escaparPatron(juego)) : base;
@@ -167,12 +174,28 @@ export class SupabaseEstampaRepository implements EstampaRepository {
     const porArchivo = incluirArchivadas
       ? porGenero
       : porGenero.eq('archivada', false);
-    const { data, error } = await porArchivo
+    const porMatch = soloMatchPerfecto
+      ? porArchivo.eq('match_perfecto', true)
+      : porArchivo;
+    const { data, error } = await porMatch
       .order('fecha', { ascending: false, nullsFirst: false })
       .order('creada_en', { ascending: false })
       .range(desplazamiento, desplazamiento + limite - 1);
     if (error) throw traducirError(error);
     return (data ?? []).map(aEstampa);
+  }
+
+  async versionesDe(id: string): Promise<EstampaGuardada[] | null> {
+    const { data, error } = await this.client
+      .from(VISTA_HISTORIAL)
+      .select(COLUMNAS)
+      .eq('id', id)
+      .order('numero_version', { ascending: true });
+    if (error) {
+      if (error.code === CODIGO_SQL.UUID_INVALIDO) return null;
+      throw traducirError(error, id);
+    }
+    return data.length === 0 ? null : data.map(aEstampa);
   }
 
   async archivar(id: string): Promise<EstampaGuardada> {

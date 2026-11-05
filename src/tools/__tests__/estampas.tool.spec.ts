@@ -40,17 +40,21 @@ const corregir = (id: string, cambios: unknown) =>
   });
 
 describe('tools/list', () => {
-  it('expone exactamente las herramientas de F1 y F3', async () => {
+  it('expone exactamente las herramientas de F1, F2 y F3', async () => {
     const { tools } = await h.client.listTools();
 
     expect(tools.map((t) => t.name).sort()).toEqual(
       [
         'archivar_estampa',
+        'comparar_estampas',
         'corregir_estampa',
         'crear_estampa',
         'exportar',
+        'historial_versiones',
         'importar_json',
         'listar_estampas',
+        'matches_perfectos',
+        'mejor_por_juego',
         'ver_estampa',
       ].sort(),
     );

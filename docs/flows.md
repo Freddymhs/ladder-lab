@@ -375,25 +375,31 @@
 
 ---
 
-## Módulo: Conclusiones (F2, bloqueada)
+## Módulo: Conclusiones (F2)
 
 ### Flujo: comparar dos estampas del mismo juego
 
 **Precondiciones:**
 
-- (por llenar)
+- Existen al menos dos estampas (del mismo juego o de distintos)
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir `comparar_estampas` con sus ids (de 2 a 10)
 
 **Resultado esperado:**
 
-- (por llenar)
+- "diferencias": los campos donde dos estampas tienen un dato real y distinto, con el valor de cada una
+- "incompletos": los campos donde alguna estampa no tiene dato, así que no se sabe si coinciden
+- La salida solo describe: no dice cuál configuración es mejor
 
 **Casos borde:**
 
-- (por llenar)
+- "desconocido", "no_aplica" o un opcional sin registrar cuentan como "sin dato", nunca como diferencia
+- Ids repetidos o inexistentes: error claro (el inexistente se nombra)
+- Se compara la versión vigente de cada una; también funciona con archivadas y entre juegos distintos
+
+**Verificación:** 24 casos de la lógica de comparación y pruebas de herramienta. contra el Supabase real y con datos reales: **pendiente** (exige credenciales y las estampas reales de Freddy). Con `matches_perfectos` y `mejor_por_juego` (DECISION_MEJOR_POR_JUEGO.md): lo mejor registrado es solo "marcada como match perfecto".
 
 ---
 
@@ -401,19 +407,24 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa con al menos una corrección
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir `historial_versiones` con el id
 
 **Resultado esperado:**
 
-- (por llenar)
+- Todas las versiones en orden; la 1 como "inicial" y cada una siguiente con los campos que cambió (de qué valor a cuál)
+- Pasar de "desconocido" a un valor se ve como cambio
 
 **Casos borde:**
 
-- (por llenar)
+- Una estampa sin correcciones muestra solo la versión inicial
+- Funciona con estampas archivadas y lo indica
+- No dice cuál versión es mejor
+
+**Verificación:** pruebas de herramienta y contrato de repositorio (doble y PostgREST real). contra el Supabase real y con datos reales: **pendiente** (exige credenciales y las estampas reales de Freddy).
 
 ---
 

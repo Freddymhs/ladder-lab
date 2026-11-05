@@ -530,5 +530,120 @@ export function describirContratoDeRepositorio(
         expect(await repo.obtener(id)).toBeNull();
       });
     });
+
+    describe('versionesDe', () => {
+      it('devuelve todas las versiones en orden, de la 1 en adelante, con sus datos', async () => {
+        const repo = await nuevo();
+        const v1 = conJuego(datosValidos(), juegoUnico());
+        const v2 = { ...v1, notas: 'dos' };
+        const v3 = { ...v1, notas: 'tres' };
+        const { id } = await repo.crear(v1);
+        await repo.corregir(id, 1, v2);
+        await repo.corregir(id, 2, v3);
+
+        const versiones = await repo.versionesDe(id);
+
+        expect(versiones?.map((v) => v.numeroVersion)).toEqual([1, 2, 3]);
+        expect(versiones?.map((v) => v.datos)).toEqual([v1, v2, v3]);
+        expect(versiones?.every((v) => v.totalVersiones === 3)).toBe(true);
+      });
+
+      it('una estampa sin correcciones tiene una sola versión', async () => {
+        const repo = await nuevo();
+        const { id } = await repo.crear(conJuego(datosValidos(), juegoUnico()));
+
+        expect(
+          (await repo.versionesDe(id))?.map((v) => v.numeroVersion),
+        ).toEqual([1]);
+      });
+
+      it('devuelve null si la estampa no existe o el id no es un uuid', async () => {
+        const repo = await nuevo();
+
+        expect(await repo.versionesDe(randomUUID())).toBeNull();
+        expect(await repo.versionesDe('no-es-un-uuid')).toBeNull();
+      });
+
+      it('incluye las versiones de una estampa archivada', async () => {
+        const repo = await nuevo();
+        const datos = conJuego(datosValidos(), juegoUnico());
+        const { id } = await repo.crear(datos);
+        await repo.corregir(id, 1, { ...datos, notas: 'dos' });
+        await repo.archivar(id);
+
+        expect(
+          (await repo.versionesDe(id))?.map((v) => v.numeroVersion),
+        ).toEqual([1, 2]);
+      });
+    });
+
+    describe('listar con soloMatchPerfecto', () => {
+      const conMatch = (
+        datos: DatosEstampa,
+        valor: boolean | undefined,
+      ): DatosEstampa => ({
+        ...datos,
+        resultado: { ...datos.resultado, matchPerfecto: valor },
+      });
+
+      it('trae solo las marcadas true: ni las false ni las sin marcar', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const base = conJuego(datosValidos(), juego);
+        const si = await repo.crear(conMatch(base, true));
+        await repo.crear(conMatch(base, false));
+        const { matchPerfecto: _quitado, ...resultadoSinMarca } =
+          base.resultado;
+        await repo.crear({ ...base, resultado: resultadoSinMarca });
+
+        const lista = await repo.listar({
+          ...LISTADO,
+          juego,
+          soloMatchPerfecto: true,
+        });
+
+        expect(lista.map((e) => e.id)).toEqual([si.id]);
+      });
+
+      it('se combina con el filtro de juego y respeta las archivadas', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const archivada = await repo.crear(
+          conMatch(conJuego(datosValidos(), juego), true),
+        );
+        await repo.archivar(archivada.id);
+        const otroJuego = await repo.crear(
+          conMatch(conJuego(datosValidos(), juegoUnico()), true),
+        );
+
+        const sinArchivadas = await repo.listar({
+          ...LISTADO,
+          juego,
+          soloMatchPerfecto: true,
+        });
+        const conArchivadas = await repo.listar({
+          ...LISTADO,
+          juego,
+          soloMatchPerfecto: true,
+          incluirArchivadas: true,
+        });
+
+        expect(sinArchivadas).toHaveLength(0);
+        expect(conArchivadas.map((e) => e.id)).toEqual([archivada.id]);
+        expect(conArchivadas.map((e) => e.id)).not.toContain(otroJuego.id);
+      });
+
+      it('usa la versión vigente: si la corrección quitó la marca, ya no aparece', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const datos = conMatch(conJuego(datosValidos(), juego), true);
+        const { id } = await repo.crear(datos);
+        await repo.corregir(id, 1, conMatch(datos, false));
+
+        expect(
+          await repo.listar({ ...LISTADO, juego, soloMatchPerfecto: true }),
+        ).toHaveLength(0);
+      });
+    });
   });
 }

@@ -24,3 +24,6 @@ export const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
 export const LISTADO_LIMITE_POR_DEFECTO = 50;
 export const LISTADO_LIMITE_MAXIMO = 200;
+
+export const COMPARAR_MINIMO = 2;
+export const COMPARAR_MAXIMO = 10;

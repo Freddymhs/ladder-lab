@@ -4,7 +4,7 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 
 ## Estado actual
 
-**F0 cerrada el 2026-11-05** (8 de 8 tareas). **F1 y F3 implementadas y probadas en local el 2026-11-05**; **nada desplegado ni usado con datos reales** (1.11 y 1.12 son de Freddy: [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md)). Detalle en cada FASE, sección «Estado de ejecución».
+**F0 cerrada el 2026-11-05** (8 de 8 tareas). **F1, F2 y F3 implementadas y probadas en local el 2026-11-05**; **nada desplegado ni usado con datos reales** (1.11 y 1.12 son de Freddy: [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md)). Detalle en cada FASE, sección «Estado de ejecución».
 **Orden de fases acordado (2026-11-05):** F0 → F1 → **F3** → F2 → F4. F3 va antes que F2.
 
 ## Fases
@@ -14,7 +14,7 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 | [FASE_0](./FASE_0_BASE.md)                  | Base (huecos de la plantilla)                               | **cerrada**                                                     | 8      | plantilla `template-mcp` vs concepto, Stack |
 | [FASE_1](./FASE_1_REGISTRAR_Y_NO_PERDER.md) | Registrar y no perder (**PROTEGIDA**)                       | implementada y probada en local; falta desplegar y usar         | 12     | concepto F1                                 |
 | [FASE_3](./FASE_3_CUIDAR_DATOS.md)          | Cuidar los datos (**va antes que F2**)                      | implementada y probada en local; falta programar y copiar fuera | 4      | concepto F3                                 |
-| [FASE_2](./FASE_2_CONCLUSIONES.md)          | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | bloqueada                                                       | 6      | concepto F2                                 |
+| [FASE_2](./FASE_2_CONCLUSIONES.md)          | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales               | 6      | concepto F2                                 |
 | [FASE_4](./FASE_4_CONVERTIDOR.md)           | Integración con el convertidor                              | pendiente                                                       | 3      | concepto F4                                 |
 
 Total: **33 tareas** en 5 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.

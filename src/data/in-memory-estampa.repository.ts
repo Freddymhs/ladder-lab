@@ -110,8 +110,19 @@ export class InMemoryEstampaRepository implements EstampaRepository {
         (e) =>
           filtro.genero === undefined || e.datos.juego.genero === filtro.genero,
       )
+      .filter(
+        (e) =>
+          !filtro.soloMatchPerfecto || e.datos.resultado.matchPerfecto === true,
+      )
       .sort(compararPorFechaDesc)
       .slice(filtro.desplazamiento, filtro.desplazamiento + filtro.limite);
+  }
+
+  async versionesDe(id: string): Promise<EstampaGuardada[] | null> {
+    const estampa = this.estampas.get(id);
+    return estampa
+      ? estampa.versiones.map((_, i) => this.version(estampa, i + 1))
+      : null;
   }
 
   async archivar(id: string): Promise<EstampaGuardada> {

@@ -9,6 +9,8 @@ export interface FiltroListado {
   readonly juego?: string;
   readonly genero?: Genero;
   readonly incluirArchivadas: boolean;
+  /** Solo las estampas cuyo resultado está marcado como match perfecto. */
+  readonly soloMatchPerfecto?: boolean;
   readonly limite: number;
   readonly desplazamiento: number;
 }
@@ -48,6 +50,8 @@ export interface EstampaRepository {
   /** Versión vigente, o `null` si la estampa no existe. */
   obtener(id: string): Promise<EstampaGuardada | null>;
   listar(filtro: FiltroListado): Promise<EstampaGuardada[]>;
+  /** Todas las versiones de una estampa, de la 1 en adelante; `null` si no existe. */
+  versionesDe(id: string): Promise<EstampaGuardada[] | null>;
   /** Marca la estampa como archivada (no borra nada). Idempotente. */
   archivar(id: string): Promise<EstampaGuardada>;
   /** Todo o nada: si algo falla no entra nada. Los ids existentes se omiten. */

@@ -1,7 +1,7 @@
 {
   "project": "ladder-lab",
   "tech": "node22-typescript-mcp-supabase",
-  "current_phase": "FASE_2",
+  "current_phase": "FASE_4",
   "phases": {
     "FASE_0": {
       "status": "done",
@@ -26,11 +26,12 @@
       ]
     },
     "FASE_2": {
-      "status": "blocked",
-      "tasks": 0,
+      "status": "implemented_without_real_data",
+      "tasks": 6,
       "total": 6,
       "name": "Conclusiones",
-      "blocked_by": "10 estampas reales en F1 (decidido 2026-11-05) y F3 hecha antes"
+      "gate_lifted_by": "orden de Freddy 2026-11-05 sin las 10 estampas reales",
+      "pending_owner": ["revisar F2 con las 10 estampas reales"]
     },
     "FASE_3": {
       "status": "implemented_not_deployed",
@@ -52,7 +53,7 @@
     }
   },
   "totals": {
-    "tasks_done": 22,
+    "tasks_done": 28,
     "tasks_total": 33
   },
   "meta": {

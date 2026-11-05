@@ -4,8 +4,21 @@
 **Dependencias**: FASE_1 **en uso con 10 estampas reales** (decidido 2026-11-05) y **FASE_3 hecha antes** (decidido 2026-11-05: primero se protegen los datos, después se sacan conclusiones)
 **Origen**: concepto, F2 ("obtener conclusiones"): `comparar_estampas`, `mejor_por_juego`, `matches_perfectos`, `historial_versiones`.
 
-> **BLOQUEADA** hasta que Freddy confirme por escrito que tiene 10 estampas reales y F3 esté hecha. Riesgo del concepto: «Sobrediseño: comparaciones antes de tener datos».
+> **Compuerta levantada por orden de Freddy el 2026-11-05, sin las 10 estampas reales** (`DECISION_COMPUERTA_F2.md`); F3 se hizo antes, como se acordó. Riesgo del concepto asumido: «Sobrediseño: comparaciones antes de tener datos». **Hay que revisar F2 con datos reales** cuando existan las 10 estampas.
 > Las tareas de abajo son deliberadamente cortas: el detalle (forma de la salida, qué diferencias importan) se decide mirando datos reales, no antes. No ampliar ahora.
+
+## Estado de ejecución (2026-11-05)
+
+**Implementada y probada en local, sin datos reales.** Revisar con las 10 estampas reales de Freddy (la forma de las salidas es una primera propuesta).
+
+| Tarea                             | Estado                                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 2.1 `historial_versiones`         | hecha                                                                                               |
+| 2.2 `comparar_estampas`           | hecha                                                                                               |
+| 2.3 ADR de «mejor» y solapamiento | hecha (`DECISION_MEJOR_POR_JUEGO.md`): una implementación, dos herramientas                         |
+| 2.4 `mejor_por_juego`             | hecha                                                                                               |
+| 2.5 `matches_perfectos`           | hecha                                                                                               |
+| 2.6 Índices                       | hecha: **no se necesitó ninguno**, medido con 20 000 estampas sintéticas (`DECISION_INDICES_F2.md`) |
 
 ## Orden de ejecución
 
@@ -56,9 +69,9 @@
 
 ## Criterios de Aceptacion
 
-- [ ] Freddy confirmó por escrito las 10 estampas reales y F3 está hecha antes de empezar.
-- [ ] Las 4 herramientas existen con tests y solo leen datos (anotaciones de solo lectura).
-- [ ] Ninguna herramienta de F2 emite un juicio de «esta configuración es mejor» ni compara rangos entre sí; el criterio de `mejor_por_juego` está en el ADR.
-- [ ] `desconocido`/`no_aplica` no se cuentan como diferencias ni como valores comparables.
-- [ ] Los índices nuevos (si hubo) están justificados con una medición.
-- [ ] `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test` pasan.
+- [ ] Freddy confirmó por escrito las 10 estampas reales. **No cumplido: la compuerta se levantó por orden** (`DECISION_COMPUERTA_F2.md`). F3 sí estaba hecha antes.
+- [x] Las 4 herramientas existen con tests y solo leen datos (anotaciones de solo lectura).
+- [x] Ninguna herramienta de F2 emite un juicio de «esta configuración es mejor» ni compara rangos entre sí; el criterio de `mejor_por_juego` está en el ADR.
+- [x] `desconocido`/`no_aplica` no se cuentan como diferencias ni como valores comparables.
+- [x] Los índices nuevos (si hubo) están justificados con una medición: no hubo ninguno, y está medido con datos **sintéticos** (`DECISION_INDICES_F2.md`).
+- [x] `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test` pasan.

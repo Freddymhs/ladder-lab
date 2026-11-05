@@ -6,7 +6,7 @@ MCP personal para registrar estampas de configuración por juego y etapa. Concep
 
 Servidor MCP (TypeScript, Node 22, Zod) con transporte stdio para desarrollo y Streamable HTTP con token para el Mac Mini. Un solo usuario, sin interfaz web.
 
-**Estado:** F0, F1 y F3 implementadas y probadas en local; **nada desplegado** y nada ejecutado contra un Supabase real (exige credenciales de Freddy: `docs/runbooks/PUESTA_EN_MARCHA.md`). Backlog y pendientes reales: `docs/backlog/README.md`.
+**Estado:** F0 a F3 implementadas y probadas en local (F2 sin datos reales); **nada desplegado** y nada ejecutado contra un Supabase real (exige credenciales de Freddy: `docs/runbooks/PUESTA_EN_MARCHA.md`). Backlog y pendientes reales: `docs/backlog/README.md`.
 
 ## Inicio rápido
 
@@ -48,17 +48,21 @@ Copia `.env.example` a `.env` (nunca se sube al repo). Se valida al arrancar y e
 | `LOG_LEVEL`            | `info`        | Nivel de pino                                       |
 | `NODE_ENV`             | `development` | `development`, `production` o `test`                |
 
-## Herramientas (F1 y F3)
+## Herramientas (F1, F2 y F3)
 
-| Herramienta        | Qué hace                                                                                                                   |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `crear_estampa`    | Registra una estampa nueva (versión 1)                                                                                     |
-| `corregir_estampa` | Crea una versión nueva con los campos corregidos; conserva la anterior                                                     |
-| `ver_estampa`      | Versión vigente, con su número y el total de versiones                                                                     |
-| `listar_estampas`  | Resumen paginado, filtrable por juego y género                                                                             |
-| `exportar`         | Envoltorio JSON versionado con el id de cada estampa, archivadas incluidas; con `incluirVersiones`, también las anteriores |
-| `archivar_estampa` | Oculta una estampa de la lista sin borrar nada (no hay herramienta para desarchivar)                                       |
-| `importar_json`    | Carga un JSON de `exportar`; simulación por defecto, todo o nada, nunca pisa un id existente                               |
+| Herramienta           | Qué hace                                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `crear_estampa`       | Registra una estampa nueva (versión 1)                                                                                     |
+| `corregir_estampa`    | Crea una versión nueva con los campos corregidos; conserva la anterior                                                     |
+| `ver_estampa`         | Versión vigente, con su número y el total de versiones                                                                     |
+| `listar_estampas`     | Resumen paginado, filtrable por juego y género                                                                             |
+| `exportar`            | Envoltorio JSON versionado con el id de cada estampa, archivadas incluidas; con `incluirVersiones`, también las anteriores |
+| `archivar_estampa`    | Oculta una estampa de la lista sin borrar nada (no hay herramienta para desarchivar)                                       |
+| `importar_json`       | Carga un JSON de `exportar`; simulación por defecto, todo o nada, nunca pisa un id existente                               |
+| `historial_versiones` | Todas las versiones de una estampa y qué campos cambiaron entre una y la siguiente                                         |
+| `comparar_estampas`   | Compara de 2 a 10 estampas campo por campo; "sin dato" no cuenta como diferencia; no juzga                                 |
+| `matches_perfectos`   | Estampas marcadas como match perfecto, con su configuración, rango (texto) y certeza                                       |
+| `mejor_por_juego`     | Lo mismo para un juego: "mejor" = marcada como match perfecto, sin ordenar rangos ni juzgar                                |
 
 Nada se borra: no existe ninguna herramienta ni permiso que borre, y la base rechaza `UPDATE`/`DELETE` de versiones (`docs/decisions/DECISION_MODELO_DATOS.md`). Formato del JSON: `docs/decisions/DECISION_FORMATO_ESTAMPA_V1.md`.
 
