@@ -28,6 +28,25 @@ const fechaIso = z
   .refine(esFechaReal, 'La fecha no existe en el calendario');
 
 const desconocido = z.literal(DESCONOCIDO);
+
+/**
+ * Texto que NO acepta ninguna palabra reservada: es un dato, no un marcador.
+ * Sin esto `nombre: "desconocido"` pasaría como un nombre más.
+ */
+const textoLibre = z
+  .string()
+  .min(1)
+  .refine((v) => v !== DESCONOCIDO && v !== NO_APLICA, {
+    message: `"${DESCONOCIDO}" y "${NO_APLICA}" son valores reservados aquí`,
+  });
+
+/** Texto que acepta `desconocido` (campo obligatorio) pero nunca `no_aplica`. */
+const textoOConocido = z
+  .string()
+  .min(1)
+  .refine((v) => v !== NO_APLICA, {
+    message: `"${NO_APLICA}" no se acepta en este campo`,
+  });
 const noAplica = z.literal(NO_APLICA);
 
 /** Un valor, o la cadena `desconocido`. Nunca `null`. */
@@ -36,11 +55,9 @@ const oDesconocido = <T extends z.ZodTypeAny>(valor: T) =>
 
 const juegoSchema = z
   .object({
-    nombre: z.string().min(1).describe('Nombre del juego'),
+    nombre: textoLibre.describe('Nombre del juego'),
     genero: z.enum(GENEROS).describe('FPS o RTS'),
-    etapa: z
-      .string()
-      .min(1)
+    etapa: textoOConocido
       .optional()
       .describe('Etapa o momento (texto); al menos etapa o fecha'),
     fecha: oDesconocido(fechaIso)
@@ -51,7 +68,7 @@ const juegoSchema = z
 
 const sistemaSchema = z
   .object({
-    mouse: z.string().min(1).describe('Marca y modelo del mouse, en un texto'),
+    mouse: textoOConocido.describe('Marca y modelo del mouse, en un texto'),
     dpi: oDesconocido(z.number().int().positive()),
     polling: oDesconocido(z.number().int().positive()).describe('Hz'),
     resolucion: oDesconocido(
@@ -62,7 +79,7 @@ const sistemaSchema = z
       z.number().int().min(POSICION_WINDOWS_MIN).max(POSICION_WINDOWS_MAX),
     ).describe('Velocidad del puntero de Windows, 1 a 11'),
     aceleracionWindows: z.enum([...ACELERACIONES_WINDOWS, DESCONOCIDO]),
-    versionWindows: z.string().min(1).optional(),
+    versionWindows: textoLibre.optional(),
   })
   .strict();
 
@@ -74,14 +91,14 @@ const enJuegoSchema = z
     rawInput: z
       .enum([...ESTADOS_RAW_INPUT, DESCONOCIDO, NO_APLICA])
       .describe('"no_aplica" si el juego no tiene raw input'),
-    parametrosInicio: z.string().min(1).optional(),
+    parametrosInicio: textoLibre.optional(),
     markC: z.boolean().optional(),
   })
   .strict();
 
 const resultadoSchema = z
   .object({
-    rango: z.string().min(1).describe('Rango en texto libre'),
+    rango: textoOConocido.describe('Rango en texto libre'),
     certeza: z
       .enum(CERTEZAS)
       .describe('medido (comprobado), recordado o estimado'),
@@ -97,7 +114,7 @@ export const datosBaseSchema = z
       .uuid()
       .optional()
       .describe('Id de la estampa de la que parte esta'),
-    notas: z.string().min(1).optional(),
+    notas: textoLibre.optional(),
     juego: juegoSchema,
     sistema: sistemaSchema,
     enJuego: enJuegoSchema,

@@ -7,6 +7,16 @@
 > Este repo no construye el convertidor ni calcula sensibilidad («Qué no es»). F4 solo garantiza que el JSON que sale de aquí sea consumible y que sus cambios no rompan al otro lado sin aviso. Riesgo del concepto: «cambios de formato sin versión».
 > Se detalla cuando exista el contrato del convertidor. Hoy no se conoce qué campos necesita ni cómo recibe el JSON.
 
+## Estado de ejecución (2026-11-05)
+
+**Hecha y verificada contra el código real de sens-lab.** Lo que queda necesita datos reales o sens-lab en ejecución.
+
+| Tarea                                       | Estado                                                                                                                                                                                                                           |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4.1 Especificación publicada del formato v1 | hecha: `docs/formato/ladder-lab.estampa.v1.md`, con una prueba que obliga a que coincida con el esquema campo por campo                                                                                                          |
+| 4.2 Política de versionado y migración      | hecha: `DECISION_VERSIONADO_FORMATO.md` (sin carpeta de migraciones: no hay v2)                                                                                                                                                  |
+| 4.3 Verificación contra el convertidor real | hecha con su importador y mapeo reales: `DECISION_INTEGRACION_CONVERTIDOR.md`, `scripts/verificar-con-sens-lab.sh` (12 comprobaciones y controles rojos). **Falta:** sens-lab en ejecución y una exportación con estampas reales |
+
 ## Orden de ejecución
 
 1. Tarea 4.1 — especificación publicada del formato (base de las otras dos)
@@ -33,7 +43,7 @@
 
 ## Criterios de Aceptacion
 
-- [ ] La especificación del formato v1 está publicada con ejemplos y sirve sin leer el código.
-- [ ] Existe una política escrita de versionado y migración.
-- [ ] Un `exportar` real fue consumido por el convertidor y el resultado quedó registrado.
-- [ ] Cambiar el formato sin subir `version` es imposible por construcción (test de contrato contra los fixtures).
+- [x] La especificación del formato v1 está publicada con ejemplos y sirve sin leer el código.
+- [x] Existe una política escrita de versionado y migración.
+- [ ] Un `exportar` real fue consumido por el convertidor y el resultado quedó registrado. **Parcial:** salidas reales del código de ladder-lab (doble en memoria) pasaron por el importador real de sens-lab; **falta una exportación con estampas reales** y sens-lab en ejecución.
+- [x] Cambiar el formato sin subir `version` es imposible por construcción: la tabla publicada debe coincidir con el esquema, los fixtures deben validar y reproducir `exportar`, y el contrato con sens-lab falla si se rompe.

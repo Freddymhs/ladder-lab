@@ -4,7 +4,7 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 
 ## Estado actual
 
-**F0 cerrada el 2026-11-05** (8 de 8 tareas). **F1, F2 y F3 implementadas y probadas en local el 2026-11-05**; **nada desplegado ni usado con datos reales** (1.11 y 1.12 son de Freddy: [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md)). Detalle en cada FASE, sección «Estado de ejecución».
+**F0 cerrada el 2026-11-05** (8 de 8 tareas). **F1 a F4 implementadas y probadas en local el 2026-11-05**; **nada desplegado ni usado con datos reales**. Lo que falta es de Freddy: ver «Pendientes reales» abajo y [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md). Detalle en cada FASE, sección «Estado de ejecución».
 **Orden de fases acordado (2026-11-05):** F0 → F1 → **F3** → F2 → F4. F3 va antes que F2.
 
 ## Fases
@@ -15,7 +15,7 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 | [FASE_1](./FASE_1_REGISTRAR_Y_NO_PERDER.md) | Registrar y no perder (**PROTEGIDA**)                       | implementada y probada en local; falta desplegar y usar         | 12     | concepto F1                                 |
 | [FASE_3](./FASE_3_CUIDAR_DATOS.md)          | Cuidar los datos (**va antes que F2**)                      | implementada y probada en local; falta programar y copiar fuera | 4      | concepto F3                                 |
 | [FASE_2](./FASE_2_CONCLUSIONES.md)          | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales               | 6      | concepto F2                                 |
-| [FASE_4](./FASE_4_CONVERTIDOR.md)           | Integración con el convertidor                              | pendiente                                                       | 3      | concepto F4                                 |
+| [FASE_4](./FASE_4_CONVERTIDOR.md)           | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real  | 3      | concepto F4                                 |
 
 Total: **33 tareas** en 5 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
 
@@ -64,11 +64,23 @@ Dadas en la revisión de F0 y del ADR del formato (sesión de control). El ADR q
 
 F1 es la única fase con prioridad hasta tener datos reales. Su alcance está cerrado (5 herramientas, esquema, versiones, formato JSON y despliegue) y está escrito en [`FASE_1`](./FASE_1_REGISTRAR_Y_NO_PERDER.md), sección «Protección de F1». F0 existe para que F1 sea solo dominio, y no contiene nada de estampas. Lo que se proponga y no sea de F1 se anota en F2/F3/F4, no se cuela en F1.
 
-## Preguntas abiertas
+## Pendientes reales
 
-Cada punto se lee solo. Un punto se cierra únicamente cuando Freddy lo confirma. Fecha de apertura: 2026-11-05.
+Todo el código y los documentos están hechos y probados en local. **No se desplegó nada y nada se ejecutó contra un Supabase real ni contra el Mac Mini**: exige credenciales y decisiones de Freddy. Pasos exactos en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md). Fecha: 2026-11-05. Cada punto se lee solo; se cierra cuando Freddy lo confirma.
 
-1. **Confirmación del ADR del formato JSON v1 (tarea 1.1).** El ADR quedó revisado en sesión de control y falta que Freddy lo confirme; hasta entonces no se escribe el esquema Zod (1.2). Decisión provisional: el formato tal como está en `DECISION_FORMATO_ESTAMPA_V1.md` (campos, valores especiales, exportación con `id` siempre y `derivadaDe` como referencia a ese `id`). Flojo: dos cosas son mías y no decididas: el nombre `numeroVersion` (número de versión en la exportación con `incluirVersiones`) y que `exportar` incluya las estampas archivadas para que ningún `derivadaDe` quede colgado. Pregunta: ¿confirmas el ADR, y te sirven `numeroVersion` y la inclusión de archivadas?
+1. **Aplicar las migraciones y desplegar (tareas 1.3 y 1.11).** Hay dos migraciones SQL escritas y probadas contra Postgres de Supabase y PostgREST reales en contenedor, pero ninguna se aplicó a un proyecto Supabase real, y el servidor no corre en el Mac Mini. Decisión provisional: despliegue como `hylian-mcp` (push, CI, runner del Mac), solo como supuesto, con el workflow de despliegue como borrador **fuera** de `.github/` (`DECISION_DEPLOY.md`). Flojo: organización, repositorio y runner sin confirmar. Pregunta: ¿cuándo quieres que se aplique y desplegue, y con qué repositorio y runner?
+
+2. **Poner F1 en uso y congelar el formato (tarea 1.12).** Sin estampas reales no se puede congelar el formato v1 (la especificación dice «no congelado»). Decisión provisional: el formato queda abierto y cualquier cambio sigue `DECISION_VERSIONADO_FORMATO.md`. Flojo: los tipos de valor propuestos (`resolucion` como `ANCHOxALTO`, `posicionWindows` de 1 a 11) y el nombre `numeroVersion` son propuesta. Pregunta: ¿cargas las primeras estampas reales y marcas el formato como congelado cuando te cierre?
+
+3. **Programar el respaldo y copiarlo fuera (tarea 3.2 y 3.4).** El comando `pnpm respaldo` está hecho y verificado (también la restauración en una base vacía real en contenedor), pero falta la tarea programada, el destino **fuera del Mac Mini y de Supabase**, y restaurar un respaldo real en un proyecto Supabase de prueba. Es la única red de seguridad: el plan gratuito no da copias descargables y pausa el proyecto inactivo (`DECISION_RESPALDO.md`). Pregunta: ¿qué destino externo usarás y cuándo se programa?
+
+4. **Supabase compartido con sens-lab.** sens-lab usa un esquema `sens_lab` dentro del mismo proyecto. Decisión provisional: se respeta (es decisión tuya) y está documentado en `DECISION_INTEGRACION_CONVERTIDOR.md`. Flojo: una sola clave `service_role` abre los dos esquemas, el respaldo de ladder-lab no cubre `sens_lab`, y la pausa por inactividad afecta a los dos productos. Pregunta: ¿aceptas ese riesgo compartido o prefieres un proyecto aparte para sens-lab?
+
+5. **Revisar F2 con datos reales.** La compuerta de F2 se levantó por orden tuya sin las 10 estampas reales (`DECISION_COMPUERTA_F2.md`); la forma de las salidas de `comparar_estampas`, `historial_versiones`, `matches_perfectos` y `mejor_por_juego` es una primera propuesta, y los índices se midieron con datos sintéticos. Decisión provisional: se deja como está. Pregunta: cuando existan las 10 estampas, ¿revisamos qué herramientas se usan y recortamos las que no?
+
+6. **Tres nombres propios de ladder-lab que Freddy no confirmó:** `numeroVersion` (versión dentro del respaldo), el campo `archivada: true` en la exportación y que la exportación incluya las archivadas (`DECISION_FORMATO_ESTAMPA_V1.md`). Ya están implementados y publicados; cambiarlos cuesta una versión del formato. Pregunta: ¿los aceptas tal cual?
+
+7. **Falta herramienta para desarchivar.** El concepto solo nombra «archivar». Decisión provisional: no existe y se anota en el ADR. Pregunta: ¿necesitas poder desarchivar?
 
 ## Diagramas de Referencia
 

@@ -173,6 +173,45 @@ describe('datosEstampaSchema — no_aplica', () => {
   });
 });
 
+describe('datosEstampaSchema — palabras reservadas en los campos de texto', () => {
+  it.each(['desconocido', 'no_aplica'])(
+    'juego.nombre no acepta "%s" como si fuera un nombre',
+    (palabra) => {
+      expect(
+        datosEstampaSchema.safeParse(conCambio('juego', 'nombre', palabra))
+          .success,
+      ).toBe(false);
+    },
+  );
+
+  it('mouse acepta "desconocido" pero nunca "no_aplica"', () => {
+    expect(
+      datosEstampaSchema.safeParse(conCambio('sistema', 'mouse', 'desconocido'))
+        .success,
+    ).toBe(true);
+    expect(
+      datosEstampaSchema.safeParse(conCambio('sistema', 'mouse', 'no_aplica'))
+        .success,
+    ).toBe(false);
+  });
+
+  it('un texto opcional (notas) no acepta ninguna palabra reservada', () => {
+    for (const palabra of ['desconocido', 'no_aplica']) {
+      expect(
+        datosEstampaSchema.safeParse({ ...base(), notas: palabra }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('un texto normal que solo CONTIENE la palabra sí se acepta', () => {
+    expect(
+      datosEstampaSchema.safeParse(
+        conCambio('juego', 'nombre', 'Juego desconocido 2'),
+      ).success,
+    ).toBe(true);
+  });
+});
+
 describe('datosEstampaSchema — tipos y rangos', () => {
   it.each<[string, string, unknown]>([
     ['sistema', 'dpi', 0],

@@ -26,6 +26,10 @@ Un campo es una de tres cosas: un **valor** de su tipo, la cadena literal `"desc
 
 Alternativa descartada: envolver cada campo como `{ "estado": …, "valor": … }`. Triplica el tamaño y obliga al convertidor a desenvolver cada campo; con las cadenas literales el estado ya viaja en el propio valor.
 
+## Palabras reservadas en los campos de texto
+
+`desconocido` y `no_aplica` son marcadores, no texto: un campo de texto **que no los acepta** (`juego.nombre`, `notas`, `parametrosInicio`, `versionWindows`) rechaza esas cadenas exactas; uno que acepta `desconocido` (`mouse`, `etapa`, `rango`) rechaza `no_aplica`. Un texto que solo _contiene_ la palabra ("Juego desconocido 2") se acepta. _(Se implementó el 2026-11-05: la primera versión del esquema las dejaba pasar como texto libre, contra esta tabla; lo detectó la prueba de la especificación publicada.)_
+
 ## Campos
 
 «Obligatorio» = debe estar presente. La columna `desconocido` dice si acepta esa cadena. Los tipos de valor (rangos, `ANCHOxALTO`, `1–11`) son propuesta; no vienen del concepto.

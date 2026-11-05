@@ -6,7 +6,7 @@ Requisitos en el equipo desde el que se ejecuta: `pnpm`, `docker`, `psql`, Supab
 
 ## 1. Proyecto Supabase propio (nube)
 
-1. Crear un proyecto nuevo, **solo para ladder-lab**. No reutilizar el de otro sistema (riesgo del concepto: incidente de seguridad pendiente en el Mac Mini).
+1. Crear un proyecto nuevo, **para ladder-lab** (nada de reutilizar el de otro sistema ajeno: riesgo del concepto, incidente de seguridad pendiente en el Mac Mini). **Excepción decidida por Freddy:** sens-lab, el convertidor, usa un esquema aparte (`sens_lab`) dentro de este mismo proyecto; implicaciones en `docs/decisions/DECISION_INTEGRACION_CONVERTIDOR.md` (una sola clave `service_role` abre los dos esquemas, y el respaldo de ladder-lab no cubre `sens_lab`).
 2. Anotar, fuera del repo: la URL del proyecto y la clave `service_role` (Ajustes → API). Esa clave ignora RLS: solo vive en el archivo de entorno del servidor.
 3. **Plan gratuito:** el proyecto se pausa tras una semana con poca actividad y no hay copias descargables (`docs/decisions/DECISION_MODELO_DATOS.md`, última sección). Verificar en la documentación vigente la ventana de restauración. El respaldo programado (sección 9) es obligatorio, no opcional.
 

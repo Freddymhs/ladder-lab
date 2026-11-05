@@ -1,7 +1,7 @@
 {
   "project": "ladder-lab",
   "tech": "node22-typescript-mcp-supabase",
-  "current_phase": "FASE_4",
+  "current_phase": "DONE_WITH_PENDING_OWNER",
   "phases": {
     "FASE_0": {
       "status": "done",
@@ -46,14 +46,18 @@
       ]
     },
     "FASE_4": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "implemented_verified_with_sens_lab",
+      "tasks": 3,
       "total": 3,
-      "name": "Integracion con el convertidor"
+      "name": "Integracion con el convertidor",
+      "pending_owner": [
+        "exportacion con estampas reales",
+        "sens-lab en ejecucion"
+      ]
     }
   },
   "totals": {
-    "tasks_done": 28,
+    "tasks_done": 31,
     "tasks_total": 33
   },
   "meta": {
@@ -62,11 +66,12 @@
     "backlog_dir": "docs/backlog",
     "testsprite_enabled": false,
     "flows_doc": "docs/flows.md",
-    "open_questions": 1,
+    "open_questions": 0,
     "execution_order": ["FASE_0", "FASE_1", "FASE_3", "FASE_2", "FASE_4"],
     "updated_at": "2026-11-05",
-    "deploy_status": "no desplegado; supuesto como hylian-mcp (FASE_1 1.11)",
     "f0_closed_at": "2026-11-05",
-    "adr_formato_v1": "revisado en sesion de control, pendiente de confirmacion de Freddy"
+    "adr_formato_v1": "revisado en sesion de control, pendiente de confirmacion de Freddy",
+    "pending_owner_points": 7,
+    "deploy_status": "no desplegado; supuesto como hylian-mcp (DECISION_DEPLOY.md)"
   }
 }

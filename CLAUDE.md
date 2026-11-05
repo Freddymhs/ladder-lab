@@ -32,11 +32,12 @@ F1 tiene un alcance cerrado: 5 herramientas, esquema, versiones, formato JSON y 
 - La versión de pnpm (major 10) está en `Dockerfile` y en `.github/workflows/ci.yml`: si una cambia, cambia la otra.
 - **Migraciones: permisos explícitos, nunca los de por defecto.** Probando contra la imagen oficial de Supabase Postgres, ni `service_role` podía leer las vistas creadas por `postgres`. Cada migración declara qué puede cada rol (`anon`/`authenticated` nada; `service_role` sin DELETE ni TRUNCATE) y se prueba con `scripts/test-integracion.sh`. Las vistas llevan `security_invoker = true`.
 - **Un doble de prueba solo vale si pasa el mismo contrato que el real.** `src/data/__tests__/contrato.ts` corre contra el repositorio en memoria y contra Supabase (PostgREST real): si divergen, una de las dos falla.
+- **El contrato con sens-lab se prueba con su código real:** `scripts/verificar-con-sens-lab.sh` (sale 1 si algo se rompe y 2 si no encuentra sens-lab: en ese caso no verificó nada). Tras cambiar el formato hay que pasarlo; la tabla de `docs/formato/ladder-lab.estampa.v1.md` debe coincidir con el esquema o falla una prueba.
 - Con pnpm 12 local, `pnpm-workspace.yaml` fija `esbuild: false` (política de builds); el CI usa pnpm 10 e ignora ese archivo.
 
 ## Reglas de trabajo
 
-- **Sin commits ni push**: los ordena Freddy. Nada de firmas de IA en commits, PR ni archivos.
+- **Sin commits ni push salvo que Freddy los ordene** (el 2026-11-05 ordenó commit y push al cerrar cada fase). **Nada de firmas de IA** en commits, PR ni archivos.
 - Sin credenciales reales en el repo, en pruebas ni en ejemplos. `.env.example` solo lleva placeholders.
 - No ejecutar migraciones ni instaladores sin confirmación. Aplicar una migración a Supabase lo hace Freddy.
 - No desplegar sin orden explícita.
