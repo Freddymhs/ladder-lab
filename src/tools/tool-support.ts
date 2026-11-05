@@ -67,5 +67,6 @@ export function resumirEstampa(estampa: EstampaGuardada) {
     certeza: resultado.certeza,
     matchPerfecto: resultado.matchPerfecto,
     numeroVersion: estampa.numeroVersion,
+    archivada: estampa.archivada,
   };
 }

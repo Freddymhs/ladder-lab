@@ -4,8 +4,9 @@ import {
   ConflictoDeVersionError,
   DerivadaInvalidaError,
   EstampaNoEncontradaError,
+  ImportacionInvalidaError,
 } from '@domain/estampa/index.js';
-import type { DatosEstampa } from '@domain/estampa/index.js';
+import type { DatosEstampa, EstampaImportable } from '@domain/estampa/index.js';
 import { datosRts, datosValidos } from '../../tools/__tests__/harness.js';
 import type { EstampaRepository } from '../estampa.repository.js';
 
@@ -261,6 +262,272 @@ export function describirContratoDeRepositorio(
         expect(vigentes.map((e) => e.numeroVersion)).toEqual([3]);
         expect(completas.map((e) => e.numeroVersion)).toEqual([1, 2, 3]);
         expect(completas.every((e) => e.totalVersiones === 3)).toBe(true);
+      });
+    });
+
+    describe('archivar', () => {
+      it('marca la estampa como archivada sin crear versiones ni tocar sus datos', async () => {
+        const repo = await nuevo();
+        const datos = conJuego(datosValidos(), juegoUnico());
+        const { id } = await repo.crear(datos);
+
+        const archivada = await repo.archivar(id);
+
+        expect(archivada.archivada).toBe(true);
+        expect(archivada.numeroVersion).toBe(1);
+        expect(archivada.totalVersiones).toBe(1);
+        expect(archivada.datos).toEqual(datos);
+        expect((await repo.obtener(id))?.archivada).toBe(true);
+      });
+
+      it('es idempotente', async () => {
+        const repo = await nuevo();
+        const { id } = await repo.crear(conJuego(datosValidos(), juegoUnico()));
+
+        await repo.archivar(id);
+        const otra = await repo.archivar(id);
+
+        expect(otra.archivada).toBe(true);
+        expect(otra.totalVersiones).toBe(1);
+      });
+
+      it('una estampa inexistente falla con EstampaNoEncontrada', async () => {
+        const repo = await nuevo();
+
+        await expect(repo.archivar(randomUUID())).rejects.toBeInstanceOf(
+          EstampaNoEncontradaError,
+        );
+      });
+
+      it('listar la oculta por defecto y la muestra con incluirArchivadas', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const { id } = await repo.crear(conJuego(datosValidos(), juego));
+        await repo.archivar(id);
+
+        const oculta = await repo.listar({ ...LISTADO, juego });
+        const visible = await repo.listar({
+          ...LISTADO,
+          juego,
+          incluirArchivadas: true,
+        });
+
+        expect(oculta).toHaveLength(0);
+        expect(visible.map((e) => e.id)).toEqual([id]);
+        expect(visible[0]?.archivada).toBe(true);
+      });
+
+      it('todas incluye las archivadas, marcadas', async () => {
+        const repo = await nuevo();
+        const { id } = await repo.crear(conJuego(datosValidos(), juegoUnico()));
+        await repo.archivar(id);
+
+        const exportada = (await repo.todas({ incluirVersiones: false })).find(
+          (e) => e.id === id,
+        );
+
+        expect(exportada?.archivada).toBe(true);
+      });
+
+      it('una estampa archivada se puede seguir corrigiendo y conserva el archivo', async () => {
+        const repo = await nuevo();
+        const datos = conJuego(datosValidos(), juegoUnico());
+        const { id } = await repo.crear(datos);
+        await repo.archivar(id);
+
+        const corregida = await repo.corregir(id, 1, {
+          ...datos,
+          notas: 'tras archivar',
+        });
+
+        expect(corregida.numeroVersion).toBe(2);
+        expect(corregida.archivada).toBe(true);
+      });
+    });
+
+    describe('importar', () => {
+      const ahora = (): string => randomUUID();
+      const estampaImportable = (
+        versiones: DatosEstampa[],
+        extra: { id?: string; archivada?: boolean } = {},
+      ): EstampaImportable => ({
+        id: extra.id ?? ahora(),
+        archivada: extra.archivada ?? false,
+        versiones: versiones.map((datos, i) => ({ numero: i + 1, datos })),
+      });
+      const APLICAR = { dryRun: false } as const;
+      const SIMULAR = { dryRun: true } as const;
+
+      it('importa estampas con sus ids, versiones y archivada, y los datos quedan idénticos', async () => {
+        const repo = await nuevo();
+        const v1 = conJuego(datosValidos(), juegoUnico());
+        const v2 = { ...v1, notas: 'segunda' };
+        const unica = conJuego(datosRts(), juegoUnico());
+        const plan = {
+          estampas: [
+            estampaImportable([v1, v2]),
+            estampaImportable([unica], { archivada: true }),
+          ],
+        };
+
+        const resultado = await repo.importar(plan, APLICAR);
+
+        expect(resultado).toEqual({
+          estampasNuevas: 2,
+          versionesNuevas: 3,
+          omitidas: [],
+          aplicada: true,
+        });
+        const [conVersiones, archivada] = plan.estampas;
+        const historial = (await repo.todas({ incluirVersiones: true })).filter(
+          (e) => e.id === conVersiones!.id,
+        );
+        expect(historial.map((e) => e.numeroVersion)).toEqual([1, 2]);
+        expect(historial.map((e) => e.datos)).toEqual([v1, v2]);
+        expect((await repo.obtener(archivada!.id))?.archivada).toBe(true);
+        expect((await repo.obtener(archivada!.id))?.datos).toEqual(unica);
+      });
+
+      it('la simulación reporta lo mismo pero no escribe nada', async () => {
+        const repo = await nuevo();
+        const plan = {
+          estampas: [
+            estampaImportable([conJuego(datosValidos(), juegoUnico())]),
+          ],
+        };
+
+        const simulada = await repo.importar(plan, SIMULAR);
+
+        expect(simulada).toEqual({
+          estampasNuevas: 1,
+          versionesNuevas: 1,
+          omitidas: [],
+          aplicada: false,
+        });
+        expect(await repo.obtener(plan.estampas[0]!.id)).toBeNull();
+        expect((await repo.importar(plan, APLICAR)).aplicada).toBe(true);
+        expect(await repo.obtener(plan.estampas[0]!.id)).not.toBeNull();
+      });
+
+      it('un id que ya existe se omite y nunca se sobrescribe', async () => {
+        const repo = await nuevo();
+        const original = conJuego(datosValidos(), juegoUnico());
+        const { id } = await repo.crear(original);
+        const distinta = {
+          ...original,
+          notas: 'distinta',
+          resultado: { ...original.resultado, rango: 'Otro' },
+        };
+
+        const resultado = await repo.importar(
+          { estampas: [estampaImportable([distinta], { id })] },
+          APLICAR,
+        );
+
+        expect(resultado).toEqual({
+          estampasNuevas: 0,
+          versionesNuevas: 0,
+          omitidas: [id],
+          aplicada: true,
+        });
+        expect((await repo.obtener(id))?.datos).toEqual(original);
+        expect((await repo.obtener(id))?.totalVersiones).toBe(1);
+      });
+
+      it('importar dos veces lo mismo es idempotente', async () => {
+        const repo = await nuevo();
+        const plan = {
+          estampas: [
+            estampaImportable([conJuego(datosValidos(), juegoUnico())]),
+          ],
+        };
+
+        await repo.importar(plan, APLICAR);
+        const segunda = await repo.importar(plan, APLICAR);
+
+        expect(segunda.estampasNuevas).toBe(0);
+        expect(segunda.omitidas).toEqual([plan.estampas[0]!.id]);
+      });
+
+      it('es atómico: si una estampa del lote falla, no entra ninguna', async () => {
+        const repo = await nuevo();
+        const buena = estampaImportable([
+          conJuego(datosValidos(), juegoUnico()),
+        ]);
+        const mala = estampaImportable([
+          { ...conJuego(datosRts(), juegoUnico()), derivadaDe: randomUUID() },
+        ]);
+
+        await expect(
+          repo.importar({ estampas: [buena, mala] }, APLICAR),
+        ).rejects.toBeInstanceOf(DerivadaInvalidaError);
+        expect(await repo.obtener(buena.id)).toBeNull();
+        expect(await repo.obtener(mala.id)).toBeNull();
+      });
+
+      it('derivadaDe puede apuntar a otra estampa del mismo lote, aunque venga después', async () => {
+        const repo = await nuevo();
+        const origen = estampaImportable([
+          conJuego(datosValidos(), juegoUnico()),
+        ]);
+        const derivada = estampaImportable([
+          { ...conJuego(datosRts(), juegoUnico()), derivadaDe: origen.id },
+        ]);
+
+        await repo.importar({ estampas: [derivada, origen] }, APLICAR);
+
+        expect((await repo.obtener(derivada.id))?.datos.derivadaDe).toBe(
+          origen.id,
+        );
+      });
+
+      it('derivadaDe puede apuntar a una estampa que ya existía', async () => {
+        const repo = await nuevo();
+        const { id: existente } = await repo.crear(
+          conJuego(datosValidos(), juegoUnico()),
+        );
+        const derivada = estampaImportable([
+          { ...conJuego(datosRts(), juegoUnico()), derivadaDe: existente },
+        ]);
+
+        await repo.importar({ estampas: [derivada] }, APLICAR);
+
+        expect((await repo.obtener(derivada.id))?.datos.derivadaDe).toBe(
+          existente,
+        );
+      });
+
+      it('rechaza la autorreferencia', async () => {
+        const repo = await nuevo();
+        const id = randomUUID();
+        const propia = estampaImportable(
+          [{ ...conJuego(datosValidos(), juegoUnico()), derivadaDe: id }],
+          { id },
+        );
+
+        await expect(
+          repo.importar({ estampas: [propia] }, APLICAR),
+        ).rejects.toBeInstanceOf(DerivadaInvalidaError);
+        expect(await repo.obtener(id)).toBeNull();
+      });
+
+      it('rechaza versiones con un salto y no escribe nada', async () => {
+        const repo = await nuevo();
+        const datos = conJuego(datosValidos(), juegoUnico());
+        const id = randomUUID();
+        const conSalto = {
+          id,
+          archivada: false,
+          versiones: [
+            { numero: 1, datos },
+            { numero: 3, datos },
+          ],
+        };
+
+        await expect(
+          repo.importar({ estampas: [conSalto] }, APLICAR),
+        ).rejects.toBeInstanceOf(ImportacionInvalidaError);
+        expect(await repo.obtener(id)).toBeNull();
       });
     });
   });

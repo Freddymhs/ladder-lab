@@ -1,7 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { registerArchivarEstampaTool } from './archivar-estampa.tool.js';
 import { registerCorregirEstampaTool } from './corregir-estampa.tool.js';
 import { registerCrearEstampaTool } from './crear-estampa.tool.js';
 import { registerExportarTool } from './exportar.tool.js';
+import { registerImportarJsonTool } from './importar-json.tool.js';
 import { registerListarEstampasTool } from './listar-estampas.tool.js';
 import { registerVerEstampaTool } from './ver-estampa.tool.js';
 import type { ToolDeps } from './tool-support.js';
@@ -14,4 +16,6 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
   registerVerEstampaTool(server, deps);
   registerListarEstampasTool(server, deps);
   registerExportarTool(server, deps);
+  registerArchivarEstampaTool(server, deps);
+  registerImportarJsonTool(server, deps);
 }

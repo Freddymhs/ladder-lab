@@ -40,14 +40,16 @@ const corregir = (id: string, cambios: unknown) =>
   });
 
 describe('tools/list', () => {
-  it('expone exactamente las 5 herramientas de F1', async () => {
+  it('expone exactamente las herramientas de F1 y F3', async () => {
     const { tools } = await h.client.listTools();
 
     expect(tools.map((t) => t.name).sort()).toEqual(
       [
+        'archivar_estampa',
         'corregir_estampa',
         'crear_estampa',
         'exportar',
+        'importar_json',
         'listar_estampas',
         'ver_estampa',
       ].sort(),

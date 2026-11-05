@@ -98,7 +98,45 @@ claude mcp add --transport http --scope user ladder-lab \
 
 ## 9. Respaldo programado (FASE_3)
 
-Ver `docs/decisions/DECISION_RESPALDO.md`: comando `pnpm respaldo`, destino fuera del Mac Mini y de Supabase, y la tarea programada.
+Detalle y límites en `docs/decisions/DECISION_RESPALDO.md`. En el plan gratuito de Supabase **no hay copias descargables**: este respaldo es la única red de seguridad.
+
+**Hacer un respaldo a mano** (desde el Mac Mini, con la misma imagen y el mismo archivo de entorno del servidor):
+
+```bash
+mkdir -p ~/respaldos/ladder-lab
+docker run --rm --user "$(id -u):$(id -g)" \
+  --env-file ~/.config/ladder-lab/ladder-lab.env \
+  -v ~/respaldos/ladder-lab:/respaldos -e RESPALDO_DIR=/respaldos \
+  ladder-lab:local node dist/respaldo.js
+echo "código de salida: $?"     # 0 bien · 1 falló · 2 hecho pero con alerta
+```
+
+Debe imprimir el denominador (estampas y versiones) y dejar un `ladder-lab-AAAAMMDDTHHMMSSZ.json`. Verificarlo:
+
+```bash
+docker run --rm --env-file ~/.config/ladder-lab/ladder-lab.env \
+  -v ~/respaldos/ladder-lab:/respaldos:ro ladder-lab:local \
+  node dist/respaldo.js --verificar /respaldos/<archivo>.json
+```
+
+**Programarlo** (una vez al día basta; también mantiene activa la base): una entrada de `cron` o un `launchd` en el Mac con el primer comando. Que el programador avise si el código de salida no es 0.
+
+**Copiar fuera del Mac Mini y de Supabase** (Freddy elige el destino; ninguna credencial va al repo). **Sin `--delete` a propósito**: la retención local poda archivos viejos y un espejo exacto vaciaría el respaldo externo justo cuando el local falla; la retención del destino externo es decisión de Freddy:
+
+```bash
+rsync -a ~/respaldos/ladder-lab/ <destino-externo>:ladder-lab/   # o: rclone copy …
+```
+
+**Restaurar** (base nueva con las migraciones ya aplicadas, sección 2). Primero simular, luego aplicar:
+
+```bash
+docker run --rm --env-file <entorno-de-la-base-destino> -v ~/respaldos/ladder-lab:/respaldos:ro \
+  ladder-lab:local node dist/restaurar.js /respaldos/<archivo>.json            # simula
+docker run --rm --env-file <entorno-de-la-base-destino> -v ~/respaldos/ladder-lab:/respaldos:ro \
+  ladder-lab:local node dist/restaurar.js /respaldos/<archivo>.json --aplicar  # restaura
+```
+
+**Prueba obligatoria antes de confiar en el respaldo:** restaurar un respaldo real en un proyecto Supabase de prueba vacío y comparar con `exportar`. Un respaldo que nunca se restauró no está probado.
 
 ## 10. Uso real y congelar el formato (tarea 1.12 y compuerta de F2)
 
@@ -118,3 +156,4 @@ Ver `docs/decisions/DECISION_RESPALDO.md`: comando `pnpm respaldo`, destino fuer
 - El repositorio de `supabase-js` contra la API real de Supabase (sí contra PostgREST real, con el mismo contrato que el doble).
 - La conexión por Tailscale desde el PC de juegos y el despliegue en el Mac Mini.
 - El comportamiento de pausa e inactividad del plan gratuito.
+- El respaldo y la restauración contra un proyecto Supabase real y con una carpeta externa real (sí contra Postgres de Supabase real en contenedor y dentro de la imagen Docker).

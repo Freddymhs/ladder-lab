@@ -22,10 +22,11 @@ export function registerListarEstampasTool(
     {
       title: 'Listar estampas',
       description:
-        'Lista un resumen de las estampas vigentes, de la más reciente a la más antigua por fecha. Se puede filtrar por juego (sin distinguir mayúsculas) y por género. Usa ver_estampa para el detalle.',
+        'Lista un resumen de las estampas vigentes, de la más reciente a la más antigua por fecha. Se puede filtrar por juego (sin distinguir mayúsculas) y por género. Las archivadas no salen salvo con incluirArchivadas. Usa ver_estampa para el detalle.',
       inputSchema: {
         juego: z.string().min(1).optional().describe('Nombre exacto del juego'),
         genero: z.enum(GENEROS).optional(),
+        incluirArchivadas: z.boolean().default(false),
         limite: z
           .number()
           .int()
@@ -36,13 +37,13 @@ export function registerListarEstampasTool(
       },
       annotations: ANOTACIONES_LECTURA,
     },
-    ({ juego, genero, limite, desplazamiento }) =>
+    ({ juego, genero, incluirArchivadas, limite, desplazamiento }) =>
       protegido(deps.logger, async () => {
         // Se pide una de más para saber si hay otra página sin contar todo.
         const encontradas = await deps.repository.listar({
           juego,
           genero,
-          incluirArchivadas: false,
+          incluirArchivadas,
           limite: limite + 1,
           desplazamiento,
         });

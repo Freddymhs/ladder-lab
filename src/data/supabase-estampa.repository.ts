@@ -6,13 +6,20 @@ import {
   DerivadaInvalidaError,
   EstampaNoEncontradaError,
   FORMATO_VERSION,
+  ImportacionInvalidaError,
   datosEstampaSchema,
 } from '@domain/estampa/index.js';
-import type { DatosEstampa, EstampaGuardada } from '@domain/estampa/index.js';
+import type {
+  DatosEstampa,
+  EstampaGuardada,
+  PlanImportacion,
+} from '@domain/estampa/index.js';
 import type {
   EstampaRepository,
   FiltroListado,
+  OpcionesImportacion,
   OpcionesTodas,
+  ResultadoImportacion,
 } from './estampa.repository.js';
 
 /** Códigos SQLSTATE propios de las migraciones (supabase/migrations). */
@@ -20,6 +27,7 @@ export const CODIGO_SQL = {
   NO_EXISTE: 'LL001',
   CONFLICTO_DE_VERSION: 'LL002',
   DERIVADA_INVALIDA: 'LL003',
+  IMPORTACION_INVALIDA: 'LL004',
   UUID_INVALIDO: '22P02',
 } as const;
 
@@ -39,6 +47,13 @@ const filaSchema = z.object({
   creada_en: z.string(),
   version_creada_en: z.string(),
   datos: datosEstampaSchema,
+});
+
+const resultadoImportacionSchema = z.object({
+  estampasNuevas: z.number().int().nonnegative(),
+  versionesNuevas: z.number().int().nonnegative(),
+  omitidas: z.array(z.string()),
+  aplicada: z.boolean(),
 });
 
 const resultadoEscrituraSchema = z.object({
@@ -64,6 +79,8 @@ function traducirError(error: ErrorPostgrest, id?: string): Error {
       return new ConflictoDeVersionError(id ?? ID_NO_INFORMADO);
     case CODIGO_SQL.DERIVADA_INVALIDA:
       return new DerivadaInvalidaError(error.message);
+    case CODIGO_SQL.IMPORTACION_INVALIDA:
+      return new ImportacionInvalidaError(error.message);
     default:
       return new AlmacenamientoError(
         'Fallo al acceder al almacenamiento',
@@ -156,6 +173,38 @@ export class SupabaseEstampaRepository implements EstampaRepository {
       .range(desplazamiento, desplazamiento + limite - 1);
     if (error) throw traducirError(error);
     return (data ?? []).map(aEstampa);
+  }
+
+  async archivar(id: string): Promise<EstampaGuardada> {
+    const { error } = await this.client.rpc('archivar_estampa', { p_id: id });
+    if (error) throw traducirError(error, id);
+    const guardada = await this.obtener(id);
+    if (!guardada) {
+      throw new AlmacenamientoError(
+        'La estampa archivada no se puede leer de vuelta',
+      );
+    }
+    return guardada;
+  }
+
+  async importar(
+    plan: PlanImportacion,
+    opciones: OpcionesImportacion,
+  ): Promise<ResultadoImportacion> {
+    const { data, error } = await this.client.rpc('importar_estampas', {
+      p_plan: plan,
+      p_dry_run: opciones.dryRun,
+      p_version_formato: FORMATO_VERSION,
+    });
+    if (error) throw traducirError(error);
+    const resultado = resultadoImportacionSchema.safeParse(data);
+    if (!resultado.success) {
+      throw new AlmacenamientoError(
+        'Respuesta inesperada al importar',
+        resultado.error,
+      );
+    }
+    return resultado.data;
   }
 
   async todas(opciones: OpcionesTodas): Promise<EstampaGuardada[]> {

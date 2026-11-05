@@ -6,7 +6,7 @@ MCP personal para registrar estampas de configuración por juego y etapa. Concep
 
 Servidor MCP (TypeScript, Node 22, Zod) con transporte stdio para desarrollo y Streamable HTTP con token para el Mac Mini. Un solo usuario, sin interfaz web.
 
-**Estado:** F0 y F1 implementadas y probadas en local; **nada desplegado** y nada ejecutado contra un Supabase real (exige credenciales de Freddy: `docs/runbooks/PUESTA_EN_MARCHA.md`). Backlog y pendientes reales: `docs/backlog/README.md`.
+**Estado:** F0, F1 y F3 implementadas y probadas en local; **nada desplegado** y nada ejecutado contra un Supabase real (exige credenciales de Freddy: `docs/runbooks/PUESTA_EN_MARCHA.md`). Backlog y pendientes reales: `docs/backlog/README.md`.
 
 ## Inicio rápido
 
@@ -19,15 +19,17 @@ pnpm dev
 
 ## Scripts
 
-| Script                  | Descripción                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm dev`              | Arranque con recarga (tsx watch)                                                                                                     |
-| `pnpm build`            | Compila TypeScript y resuelve los alias                                                                                              |
-| `pnpm start`            | Ejecuta el build                                                                                                                     |
-| `pnpm test`             | Pruebas (Vitest); no tocan ninguna base                                                                                              |
-| `pnpm test:integration` | Pruebas contra Postgres/PostgREST reales; sin base se saltan y lo dicen. Con contenedores desechables: `scripts/test-integracion.sh` |
-| `pnpm lint`             | ESLint + Prettier sobre `src/`                                                                                                       |
-| `pnpm type-check`       | Tipos sin emitir                                                                                                                     |
+| Script                     | Descripción                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                 | Arranque con recarga (tsx watch)                                                                                                     |
+| `pnpm build`               | Compila TypeScript y resuelve los alias                                                                                              |
+| `pnpm start`               | Ejecuta el build                                                                                                                     |
+| `pnpm test`                | Pruebas (Vitest); no tocan ninguna base                                                                                              |
+| `pnpm respaldo`            | Respaldo completo y verificado (`--verificar <archivo>` comprueba uno); ver `docs/decisions/DECISION_RESPALDO.md`                    |
+| `pnpm restaurar <archivo>` | Simula una restauración; con `--aplicar` la hace                                                                                     |
+| `pnpm test:integration`    | Pruebas contra Postgres/PostgREST reales; sin base se saltan y lo dicen. Con contenedores desechables: `scripts/test-integracion.sh` |
+| `pnpm lint`                | ESLint + Prettier sobre `src/`                                                                                                       |
+| `pnpm type-check`          | Tipos sin emitir                                                                                                                     |
 
 ## Configuración
 
@@ -41,18 +43,22 @@ Copia `.env.example` a `.env` (nunca se sube al repo). Se valida al arrancar y e
 | `MCP_AUTH_TOKEN`       | —             | Obligatorio con `http`; mínimo 32 caracteres        |
 | `SUPABASE_URL`         | —             | Obligatoria fuera de `NODE_ENV=test`                |
 | `SUPABASE_SERVICE_KEY` | —             | Obligatoria fuera de `NODE_ENV=test`; solo servidor |
+| `RESPALDO_DIR`         | `respaldos`   | Carpeta de destino de `pnpm respaldo`               |
+| `RESPALDO_RETENCION`   | `30`          | Cuántos respaldos se conservan                      |
 | `LOG_LEVEL`            | `info`        | Nivel de pino                                       |
 | `NODE_ENV`             | `development` | `development`, `production` o `test`                |
 
-## Herramientas (F1)
+## Herramientas (F1 y F3)
 
-| Herramienta        | Qué hace                                                                                             |
-| ------------------ | ---------------------------------------------------------------------------------------------------- |
-| `crear_estampa`    | Registra una estampa nueva (versión 1)                                                               |
-| `corregir_estampa` | Crea una versión nueva con los campos corregidos; conserva la anterior                               |
-| `ver_estampa`      | Versión vigente, con su número y el total de versiones                                               |
-| `listar_estampas`  | Resumen paginado, filtrable por juego y género                                                       |
-| `exportar`         | Envoltorio JSON versionado con el id de cada estampa; con `incluirVersiones`, también las anteriores |
+| Herramienta        | Qué hace                                                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `crear_estampa`    | Registra una estampa nueva (versión 1)                                                                                     |
+| `corregir_estampa` | Crea una versión nueva con los campos corregidos; conserva la anterior                                                     |
+| `ver_estampa`      | Versión vigente, con su número y el total de versiones                                                                     |
+| `listar_estampas`  | Resumen paginado, filtrable por juego y género                                                                             |
+| `exportar`         | Envoltorio JSON versionado con el id de cada estampa, archivadas incluidas; con `incluirVersiones`, también las anteriores |
+| `archivar_estampa` | Oculta una estampa de la lista sin borrar nada (no hay herramienta para desarchivar)                                       |
+| `importar_json`    | Carga un JSON de `exportar`; simulación por defecto, todo o nada, nunca pisa un id existente                               |
 
 Nada se borra: no existe ninguna herramienta ni permiso que borre, y la base rechaza `UPDATE`/`DELETE` de versiones (`docs/decisions/DECISION_MODELO_DATOS.md`). Formato del JSON: `docs/decisions/DECISION_FORMATO_ESTAMPA_V1.md`.
 
@@ -77,6 +83,7 @@ src/
 ├── http/          # Servidor HTTP: auth por token, límites, modo sin estado
 ├── domain/estampa/ # Esquema Zod, constantes, errores, fusión y exportación (sin dependencias de infraestructura)
 ├── data/          # Repositorio: interfaz, doble en memoria y Supabase (supabase-js)
+├── respaldo/      # Respaldo, verificación y restauración (comandos `respaldo` y `restaurar`)
 ├── tools/         # Herramientas MCP
 ├── resources/     # Vacío: el concepto solo pide herramientas
 └── prompts/       # Vacío: el concepto solo pide herramientas

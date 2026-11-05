@@ -332,6 +332,255 @@ describe.skipIf(!urlAdmin)(`SQL real (${VARIABLE_BASE_DE_PRUEBAS})`, () => {
     });
   });
 
+  describe('archivar_estampa', () => {
+    it('marca archivada_en sin crear versiones ni tocar los datos', () => {
+      const { id } = crear();
+
+      sql(`select public.archivar_estampa('${id}')`);
+
+      expect(
+        sql(
+          `select archivada, total_versiones from estampas_vigentes where id='${id}'`,
+        ),
+      ).toBe('t|1');
+      expect(
+        sql(`select count(*) from estampa_versiones where estampa_id='${id}'`),
+      ).toBe('1');
+    });
+
+    it('es idempotente: archivar de nuevo conserva la fecha original', () => {
+      const { id } = crear();
+      sql(`select public.archivar_estampa('${id}')`);
+      const primera = sql(`select archivada_en from estampas where id='${id}'`);
+
+      sql(`select public.archivar_estampa('${id}')`);
+
+      expect(sql(`select archivada_en from estampas where id='${id}'`)).toBe(
+        primera,
+      );
+    });
+
+    it('una estampa inexistente falla con LL001', () => {
+      expect(
+        falla(
+          `select public.archivar_estampa('7d1c2f4e-0000-4000-8000-0000000000ff')`,
+        ),
+      ).toContain('LL001');
+    });
+  });
+
+  describe('importar_estampas', () => {
+    const ID_A = '7d1c2f4e-0000-4000-8000-0000000000a1';
+    const ID_B = '7d1c2f4e-0000-4000-8000-0000000000b2';
+    const plan = (estampas: unknown[]) => ({ estampas });
+    const estampa = (id: string, versiones: unknown[], archivada = false) => ({
+      id,
+      archivada,
+      versiones,
+    });
+    const version = (numero: number, d: unknown = datos()) => ({
+      numero,
+      datos: d,
+    });
+    const importar = (p: unknown, dryRun: boolean) =>
+      JSON.parse(
+        sql(`select public.importar_estampas(${literalJson(p)}, ${dryRun}, 1)`),
+      ) as {
+        estampasNuevas: number;
+        versionesNuevas: number;
+        omitidas: string[];
+        aplicada: boolean;
+      };
+    const cuenta = (id: string) =>
+      sql(`select count(*) from estampa_versiones where estampa_id='${id}'`);
+
+    it('importa con los ids dados, las versiones en orden y la marca archivada', () => {
+      const id = '7d1c2f4e-0000-4000-8000-0000000000c3';
+
+      const resultado = importar(
+        plan([
+          estampa(
+            id,
+            [version(1, datos({}, 'A')), version(2, datos({}, 'B'))],
+            true,
+          ),
+        ]),
+        false,
+      );
+
+      expect(resultado).toEqual({
+        estampasNuevas: 1,
+        versionesNuevas: 2,
+        omitidas: [],
+        aplicada: true,
+      });
+      expect(
+        sql(
+          `select numero_version, datos #>> '{resultado,rango}' from estampa_versiones where estampa_id='${id}' order by 1`,
+        ),
+      ).toBe('1|A\n2|B');
+      expect(
+        sql(
+          `select archivada, total_versiones from estampas_vigentes where id='${id}'`,
+        ),
+      ).toBe('t|2');
+    });
+
+    it('la simulación ejecuta todo y lo deshace: reporta igual y no deja nada', () => {
+      const id = '7d1c2f4e-0000-4000-8000-0000000000d4';
+
+      const resultado = importar(
+        plan([estampa(id, [version(1), version(2)])]),
+        true,
+      );
+
+      expect(resultado).toEqual({
+        estampasNuevas: 1,
+        versionesNuevas: 2,
+        omitidas: [],
+        aplicada: false,
+      });
+      expect(sql(`select count(*) from estampas where id='${id}'`)).toBe('0');
+      expect(cuenta(id)).toBe('0');
+    });
+
+    it('la simulación también rechaza lo que rechazaría la real', () => {
+      const id = '7d1c2f4e-0000-4000-8000-0000000000e5';
+      const conSalto = plan([estampa(id, [version(1), version(3)])]);
+
+      expect(
+        falla(
+          `select public.importar_estampas(${literalJson(conSalto)}, true, 1)`,
+        ),
+      ).toContain('LL004');
+    });
+
+    it('un id que ya existe se omite y no se sobrescribe', () => {
+      const existente = crear(datos({}, 'Original'));
+
+      const resultado = importar(
+        plan([estampa(existente.id, [version(1, datos({}, 'Otro'))])]),
+        false,
+      );
+
+      expect(resultado).toMatchObject({
+        estampasNuevas: 0,
+        versionesNuevas: 0,
+        omitidas: [existente.id],
+      });
+      expect(
+        sql(
+          `select datos #>> '{resultado,rango}' from estampa_versiones where estampa_id='${existente.id}'`,
+        ),
+      ).toBe('Original');
+    });
+
+    it('rechaza versiones con un salto o que no empiezan en 1 (LL004) y no deja nada', () => {
+      for (const versiones of [[version(1), version(3)], [version(2)], []]) {
+        const id = crypto.randomUUID();
+
+        expect(
+          falla(
+            `select public.importar_estampas(${literalJson(plan([estampa(id, versiones)]))}, false, 1)`,
+          ),
+        ).toContain('LL004');
+        expect(sql(`select count(*) from estampas where id='${id}'`)).toBe('0');
+      }
+    });
+
+    it('rechaza un plan sin el arreglo estampas (LL004)', () => {
+      expect(
+        falla(`select public.importar_estampas('{}'::jsonb, false, 1)`),
+      ).toContain('LL004');
+    });
+
+    it('es atómico: si la segunda estampa falla, la primera tampoco entra', () => {
+      const buena = '7d1c2f4e-0000-4000-8000-0000000000f6';
+      const mala = '7d1c2f4e-0000-4000-8000-0000000000f7';
+      const p = plan([
+        estampa(buena, [version(1)]),
+        estampa(mala, [
+          version(
+            1,
+            datos({ derivadaDe: '7d1c2f4e-0000-4000-8000-0000000000ff' }),
+          ),
+        ]),
+      ]);
+
+      expect(
+        falla(`select public.importar_estampas(${literalJson(p)}, false, 1)`),
+      ).toContain('LL003');
+      expect(
+        sql(`select count(*) from estampas where id in ('${buena}','${mala}')`),
+      ).toBe('0');
+    });
+
+    it('derivadaDe puede apuntar a otra estampa del lote, aunque venga después', () => {
+      const p = plan([
+        estampa(ID_B, [version(1, datos({ derivadaDe: ID_A }))]),
+        estampa(ID_A, [version(1)]),
+      ]);
+
+      expect(importar(p, false).estampasNuevas).toBe(2);
+      expect(
+        sql(
+          `select datos ->> 'derivadaDe' from estampa_versiones where estampa_id='${ID_B}'`,
+        ),
+      ).toBe(ID_A);
+    });
+
+    it('rechaza la autorreferencia (LL003)', () => {
+      const id = crypto.randomUUID();
+      const p = plan([estampa(id, [version(1, datos({ derivadaDe: id }))])]);
+
+      expect(
+        falla(`select public.importar_estampas(${literalJson(p)}, false, 1)`),
+      ).toContain('LL003');
+    });
+
+    it('importar lo mismo dos veces es idempotente', () => {
+      const id = crypto.randomUUID();
+      const p = plan([estampa(id, [version(1), version(2)])]);
+
+      importar(p, false);
+      const segunda = importar(p, false);
+
+      expect(segunda).toMatchObject({ estampasNuevas: 0, omitidas: [id] });
+      expect(cuenta(id)).toBe('2');
+    });
+  });
+
+  describe('permisos de las funciones de F3 (solo con roles de Supabase)', () => {
+    const hayRoles = (): boolean =>
+      sql(
+        `select count(*) = 2 from pg_roles where rolname in ('anon','service_role')`,
+      ) === 't';
+    const DENEGADO = /permission denied|permiso denegado/i;
+
+    it('anon no puede archivar ni importar; service_role sí', (contexto) => {
+      if (!hayRoles()) contexto.skip();
+      const { id } = crear();
+      const vacio = literalJson({ estampas: [] });
+
+      expect(
+        falla(`set role anon; select public.archivar_estampa('${id}')`),
+      ).toMatch(DENEGADO);
+      expect(
+        falla(
+          `set role anon; select public.importar_estampas(${vacio}, true, 1)`,
+        ),
+      ).toMatch(DENEGADO);
+      expect(
+        sql(`set role service_role; select public.archivar_estampa('${id}')`),
+      ).toContain('archivada');
+      expect(
+        sql(
+          `set role service_role; select public.importar_estampas(${vacio}, true, 1)`,
+        ),
+      ).toContain('estampasNuevas');
+    });
+  });
+
   describe('la vista de historial', () => {
     it('total_versiones cuenta por estampa y vigentes trae solo la última', () => {
       const { id } = crear();

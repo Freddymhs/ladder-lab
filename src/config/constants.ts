@@ -10,6 +10,8 @@ export const ENV_KEYS = {
   LOG_LEVEL: 'LOG_LEVEL',
   SUPABASE_URL: 'SUPABASE_URL',
   SUPABASE_SERVICE_KEY: 'SUPABASE_SERVICE_KEY',
+  RESPALDO_DIR: 'RESPALDO_DIR',
+  RESPALDO_RETENCION: 'RESPALDO_RETENCION',
 } as const;
 
 export type EnvKey = (typeof ENV_KEYS)[keyof typeof ENV_KEYS];
@@ -38,6 +40,8 @@ export const LOG_LEVELS = [
 export const DEFAULT_LOG_LEVEL = 'info' as const;
 
 export const DEFAULT_PORT = 3000;
+export const DEFAULT_RESPALDO_DIR = 'respaldos';
+export const DEFAULT_RESPALDO_RETENCION = 30;
 // Loopback por defecto: exponer el servidor en otra interfaz (p. ej. la de
 // Tailscale) es una decisión explícita de despliegue, nunca el default.
 export const DEFAULT_HOST = '127.0.0.1';

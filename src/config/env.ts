@@ -3,6 +3,8 @@ import {
   DEFAULT_HOST,
   DEFAULT_LOG_LEVEL,
   DEFAULT_PORT,
+  DEFAULT_RESPALDO_DIR,
+  DEFAULT_RESPALDO_RETENCION,
   ENV_KEYS,
   LOG_LEVELS,
   MIN_AUTH_TOKEN_LENGTH,
@@ -22,6 +24,8 @@ interface BaseEnv {
   readonly logLevel: string;
   readonly supabaseUrl: string | undefined;
   readonly supabaseServiceKey: string | undefined;
+  readonly respaldoDir: string;
+  readonly respaldoRetencion: number;
 }
 
 interface StdioEnv extends BaseEnv {
@@ -72,6 +76,11 @@ const schema = Joi.object({
     Joi.string().uri({ scheme: ['http', 'https'] }),
   ),
   [ENV_KEYS.SUPABASE_SERVICE_KEY]: requiredOutsideTest(Joi.string()),
+  [ENV_KEYS.RESPALDO_DIR]: Joi.string().empty('').default(DEFAULT_RESPALDO_DIR),
+  [ENV_KEYS.RESPALDO_RETENCION]: Joi.number()
+    .integer()
+    .min(1)
+    .default(DEFAULT_RESPALDO_RETENCION),
 }).options({ abortEarly: false, allowUnknown: true });
 
 /**
@@ -95,6 +104,8 @@ export function parseEnv(source: NodeJS.ProcessEnv): Env {
     supabaseServiceKey: value[ENV_KEYS.SUPABASE_SERVICE_KEY] as
       | string
       | undefined,
+    respaldoDir: value[ENV_KEYS.RESPALDO_DIR] as string,
+    respaldoRetencion: value[ENV_KEYS.RESPALDO_RETENCION] as number,
   };
 
   if (value[ENV_KEYS.MCP_TRANSPORT] === TRANSPORT_HTTP) {

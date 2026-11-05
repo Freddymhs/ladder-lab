@@ -5,3 +5,4 @@ export * from './model.js';
 export * from './merge.js';
 export * from './export.js';
 export * from './validar.js';
+export * from './import.js';

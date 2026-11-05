@@ -25,6 +25,22 @@ describe('parseEnv', () => {
     },
   );
 
+  it('respaldo: carpeta y retención por defecto, y rechaza una retención menor que 1', () => {
+    const env = parseEnv({ NODE_ENV: 'test' });
+
+    expect(env.respaldoDir).toBe('respaldos');
+    expect(env.respaldoRetencion).toBe(30);
+    expect(parseEnv({ NODE_ENV: 'test', RESPALDO_DIR: '' }).respaldoDir).toBe(
+      'respaldos',
+    );
+    expect(() =>
+      parseEnv({ NODE_ENV: 'test', RESPALDO_RETENCION: '0' }),
+    ).toThrow(/RESPALDO_RETENCION/);
+    expect(() =>
+      parseEnv({ NODE_ENV: 'test', RESPALDO_RETENCION: '2.5' }),
+    ).toThrow(/RESPALDO_RETENCION/);
+  });
+
   it('treats an empty SUPABASE_URL (copied from .env.example) as missing', () => {
     expect(() =>
       parseEnv({ NODE_ENV: 'production', ...SUPABASE, SUPABASE_URL: '' }),

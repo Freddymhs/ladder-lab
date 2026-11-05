@@ -38,6 +38,9 @@ coverage/
 # pnpm
 .pnpm-store/
 
+# Respaldos locales de datos reales: nunca al repo
+respaldos/
+
 # Claude / AI tools
 .claude/settings.local.json
 .serena/

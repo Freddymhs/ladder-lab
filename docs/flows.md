@@ -423,19 +423,29 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Existe una estampa, idealmente con más de una versión
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir `archivar_estampa` con el id
+2. `listar_estampas` sin parámetros y luego con `incluirArchivadas: true`
+3. `ver_estampa` y `exportar` con `incluirVersiones`
 
 **Resultado esperado:**
 
-- (por llenar)
+- La estampa deja de salir en la lista normal y sale marcada con `incluirArchivadas`
+- `ver_estampa` la sigue mostrando, con `archivada: true`
+- `exportar` la incluye con `archivada: true` y todas sus versiones
+- Archivar de nuevo responde "Ya estaba archivada" y no cambia nada
 
 **Casos borde:**
 
-- (por llenar)
+- Archivar no crea versiones ni cambia los datos
+- Una estampa archivada se puede seguir corrigiendo y sigue archivada
+- No existe herramienta que borre ni que desarchive (el concepto solo nombra archivar)
+- Por SQL, `service_role` no puede borrar y los triggers lo impiden igual
+
+**Verificación:** pruebas de herramienta, contrato de repositorio (doble y PostgREST real) y SQL real. contra el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---
 
@@ -443,19 +453,29 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Un respaldo hecho con `pnpm respaldo` y verificado
+- Una base nueva con las migraciones aplicadas
 
 **Pasos:**
 
-1. (por llenar)
+1. `node dist/restaurar.js <respaldo>` (simula)
+2. Revisar cuántas estampas y versiones entrarían
+3. `node dist/restaurar.js <respaldo> --aplicar`
+4. Hacer `exportar` con `incluirVersiones` y comparar con el respaldo
 
 **Resultado esperado:**
 
-- (por llenar)
+- La simulación reporta lo que entraría y no escribe nada
+- Tras aplicar, los ids, las versiones, los datos y las archivadas son idénticos al origen
+- Restaurar otra vez no duplica nada (los ids existentes se omiten)
 
 **Casos borde:**
 
-- (por llenar)
+- Un respaldo truncado, vacío, de otro formato o con una versión faltante falla ANTES de tocar la base y sale con código 1
+- Los instantes originales de creación no se conservan (límite documentado en DECISION_RESPALDO.md)
+- Si algo falla a mitad, no entra nada (todo o nada)
+
+**Verificación:** restauración real en una base VACÍA con la función SQL real, comparada dato por dato; respaldo roto fallando; comandos probados dentro de la imagen Docker. Restaurar un respaldo real en un Supabase de prueba: **pendiente** (runbook, sección 9).
 
 ---
 
@@ -463,18 +483,25 @@
 
 **Precondiciones:**
 
-- (por llenar)
+- Un JSON producido por `exportar` (con o sin versiones)
 
 **Pasos:**
 
-1. (por llenar)
+1. Pedir `importar_json` con el JSON (por defecto es una simulación)
+2. Revisar el reporte y repetir con `dryRun: false`
 
 **Resultado esperado:**
 
-- (por llenar)
+- La simulación dice cuántas estampas y versiones entrarían y cuáles ya existen, sin escribir
+- Con `dryRun: false` entran; las que ya existían se omiten y nunca se sobrescriben
+- Importar lo mismo dos veces es idempotente
 
 **Casos borde:**
 
-- (por llenar)
+- Otro formato u otra versión (p. ej. 2): rechazado con un mensaje que dice qué llegó y qué se soporta
+- Versiones con saltos o repetidas, o un derivadaDe que no existe: se rechaza el lote entero
+- Sin `incluirVersiones` en la exportación, cada estampa se restaura como versión 1
+
+**Verificación:** pruebas de herramienta (incluida la ida y vuelta exportar → importar entre dos servidores, idéntica), contrato y SQL real. contra el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ---

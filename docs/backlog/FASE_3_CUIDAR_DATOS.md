@@ -6,6 +6,19 @@
 
 > El concepto no ordena F3 respecto de F2. Freddy decidió el 2026-11-05 hacer F3 **antes** que F2: el respaldo protege horas de juego convertidas en datos («no se pueden perder»).
 
+## Estado de ejecución (2026-11-05)
+
+**Implementada y probada en local. Sin probar contra un Supabase real ni con un destino externo real** (exige credenciales de Freddy: [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md), sección 9).
+
+| Tarea                      | Estado                                                                                                                  |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 3.1 `archivar_estampa`     | hecha (herramienta, migración, `incluirArchivadas` en `listar_estampas`; `ver_estampa` y `exportar` marcan `archivada`) |
+| 3.2 Respaldo programado    | **comando y verificación hechos** (`pnpm respaldo`); **la tarea programada y la copia externa son de Freddy** (runbook) |
+| 3.3 `importar_json`        | hecha (+ comando `pnpm restaurar`, que evita pasar el JSON por el chat)                                                 |
+| 3.4 Prueba de restauración | hecha contra una base vacía real (contenedor); con un Supabase real: **pendiente**                                      |
+
+ADR: [`DECISION_RESPALDO.md`](../decisions/DECISION_RESPALDO.md).
+
 ## Orden de ejecución
 
 1. Tarea 3.1 — `archivar_estampa` (independiente)
@@ -41,8 +54,8 @@
 
 ## Criterios de Aceptacion
 
-- [ ] Archivar oculta pero no borra; ningún camino de la API ni de SQL elimina una estampa o versión.
-- [ ] El respaldo corre solo, deja un registro con denominadores y su copia está fuera del Mac Mini y de Supabase.
-- [ ] Se restauró un respaldo real en una base vacía con resultado idéntico, y se vio fallar con un respaldo roto.
-- [ ] `importar_json` rechaza formato/versión desconocidos, no sobrescribe, y es atómico.
-- [ ] `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test` pasan.
+- [x] Archivar oculta pero no borra; ningún camino de la API ni de SQL elimina una estampa o versión (probado en herramienta, contrato y SQL real).
+- [ ] El respaldo corre solo, deja un registro con denominadores y su copia está fuera del Mac Mini y de Supabase. **Parcial:** el comando deja el registro con denominadores y alerta si baja el número de datos; **programarlo y la copia externa son de Freddy** (runbook sección 9).
+- [x] Se restauró un respaldo en una base vacía con resultado idéntico, y se vio fallar con un respaldo roto (base real en contenedor, comparada dato por dato; restaurar en un Supabase real: pendiente).
+- [x] `importar_json` rechaza formato/versión desconocidos, no sobrescribe, y es atómico.
+- [x] `pnpm lint`, `pnpm type-check`, `pnpm build`, `pnpm test` pasan.

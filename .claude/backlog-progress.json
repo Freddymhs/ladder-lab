@@ -1,7 +1,7 @@
 {
   "project": "ladder-lab",
   "tech": "node22-typescript-mcp-supabase",
-  "current_phase": "FASE_3",
+  "current_phase": "FASE_2",
   "phases": {
     "FASE_0": {
       "status": "done",
@@ -33,11 +33,16 @@
       "blocked_by": "10 estampas reales en F1 (decidido 2026-11-05) y F3 hecha antes"
     },
     "FASE_3": {
-      "status": "pending",
-      "tasks": 0,
+      "status": "implemented_not_deployed",
+      "tasks": 4,
       "total": 4,
       "name": "Cuidar los datos",
-      "note": "va antes que F2 (decidido 2026-11-05)"
+      "pending_owner": [
+        "programar el respaldo y copiarlo fuera del Mac Mini y de Supabase"
+      ],
+      "pending_real_credentials": [
+        "restaurar un respaldo real en un Supabase de prueba"
+      ]
     },
     "FASE_4": {
       "status": "pending",
@@ -47,7 +52,7 @@
     }
   },
   "totals": {
-    "tasks_done": 18,
+    "tasks_done": 22,
     "tasks_total": 33
   },
   "meta": {

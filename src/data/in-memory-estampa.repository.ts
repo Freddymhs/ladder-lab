@@ -3,13 +3,20 @@ import {
   ConflictoDeVersionError,
   DerivadaInvalidaError,
   EstampaNoEncontradaError,
+  ImportacionInvalidaError,
   PATRON_FECHA,
 } from '@domain/estampa/index.js';
-import type { DatosEstampa, EstampaGuardada } from '@domain/estampa/index.js';
+import type {
+  DatosEstampa,
+  EstampaGuardada,
+  PlanImportacion,
+} from '@domain/estampa/index.js';
 import type {
   EstampaRepository,
   FiltroListado,
+  OpcionesImportacion,
   OpcionesTodas,
+  ResultadoImportacion,
 } from './estampa.repository.js';
 
 interface VersionAlmacenada {
@@ -105,6 +112,80 @@ export class InMemoryEstampaRepository implements EstampaRepository {
       )
       .sort(compararPorFechaDesc)
       .slice(filtro.desplazamiento, filtro.desplazamiento + filtro.limite);
+  }
+
+  async archivar(id: string): Promise<EstampaGuardada> {
+    const estampa = this.requerir(id);
+    estampa.archivadaEn ??= this.ahora().toISOString();
+    return this.vigente(estampa);
+  }
+
+  async importar(
+    plan: PlanImportacion,
+    opciones: OpcionesImportacion,
+  ): Promise<ResultadoImportacion> {
+    const omitidas = plan.estampas
+      .filter((e) => this.estampas.has(e.id))
+      .map((e) => e.id);
+    const nuevas = plan.estampas.filter((e) => !this.estampas.has(e.id));
+    const idsDelLote = new Set(nuevas.map((e) => e.id));
+
+    // Se valida TODO antes de escribir algo: o entra todo o no entra nada.
+    for (const estampa of nuevas) {
+      estampa.versiones.forEach((version, indice) => {
+        if (version.numero !== indice + 1) {
+          throw new ImportacionInvalidaError(
+            `La estampa ${estampa.id} tiene versiones incompletas o repetidas (se esperaba la ${indice + 1}).`,
+          );
+        }
+        const { derivadaDe } = version.datos;
+        if (derivadaDe === estampa.id) {
+          throw new DerivadaInvalidaError(
+            'Una estampa no puede derivar de sí misma.',
+          );
+        }
+        if (
+          derivadaDe !== undefined &&
+          !this.estampas.has(derivadaDe) &&
+          !idsDelLote.has(derivadaDe)
+        ) {
+          throw new DerivadaInvalidaError(
+            `derivadaDe apunta a una estampa que no existe: ${derivadaDe}.`,
+          );
+        }
+      });
+      if (estampa.versiones.length === 0) {
+        throw new ImportacionInvalidaError(
+          `La estampa ${estampa.id} no trae ninguna versión.`,
+        );
+      }
+    }
+
+    const versionesNuevas = nuevas.reduce(
+      (suma, e) => suma + e.versiones.length,
+      0,
+    );
+    if (!opciones.dryRun) {
+      const marca = this.ahora().toISOString();
+      for (const estampa of nuevas) {
+        this.estampas.set(estampa.id, {
+          id: estampa.id,
+          orden: this.estampas.size,
+          creadaEn: marca,
+          versiones: estampa.versiones.map((v) => ({
+            datos: structuredClone(v.datos),
+            creadaEn: marca,
+          })),
+          archivadaEn: estampa.archivada ? marca : undefined,
+        });
+      }
+    }
+    return {
+      estampasNuevas: nuevas.length,
+      versionesNuevas,
+      omitidas,
+      aplicada: !opciones.dryRun,
+    };
   }
 
   async todas(opciones: OpcionesTodas): Promise<EstampaGuardada[]> {
