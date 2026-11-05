@@ -6,7 +6,7 @@ MCP personal para registrar estampas de configuración por juego y etapa. Concep
 
 Servidor MCP (TypeScript, Node 22, Zod) con transporte stdio para desarrollo y Streamable HTTP con token para el Mac Mini. Un solo usuario, sin interfaz web.
 
-**Estado:** F0 a F3 implementadas y probadas en local (F2 sin datos reales); **nada desplegado** y nada ejecutado contra un Supabase real (exige credenciales de Freddy: `docs/runbooks/PUESTA_EN_MARCHA.md`). Backlog y pendientes reales: `docs/backlog/README.md`.
+**Estado:** F0 a F4 implementadas y **desplegadas el 2026-11-05** en el Mac Mini, con base en Neon y sin datos reales todavía. Operación: [`docs/runbooks/PUESTA_EN_MARCHA.md`](docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ## Inicio rápido
 
@@ -113,7 +113,7 @@ La imagen corre como usuario no root, solo con dependencias de producción, y tr
 
 ```bash
 claude mcp add --transport http --scope user ladder-lab \
-  http://<host-tailscale>:3000/mcp \
+  https://mac-mini-server.tail1798c7.ts.net:8444/mcp \
   --header "Authorization: Bearer <TOKEN>"
 ```
 

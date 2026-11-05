@@ -1,5 +1,7 @@
 # DECISION: Un documento jsonb por versión, con columnas generadas solo para filtrar
 
+**Base real desde el 2026-11-05:** Neon, no Supabase (`DECISION_BASE_NEON.md`). El modelo no cambia.
+
 Fecha: 2026-11-05 (tarea 1.3 de FASE_1). Migración: `supabase/migrations/20261105120000_crear_estampas.sql`.
 
 ## Qué dice el concepto

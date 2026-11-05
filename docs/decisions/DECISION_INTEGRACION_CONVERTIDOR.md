@@ -1,5 +1,7 @@
 # DECISION: Integración con el convertidor (sens-lab) — verificada con su código real
 
+**Desde el 2026-11-05 el proyecto compartido es Neon** (`DECISION_BASE_NEON.md`). Lo demás sigue igual, también la clave única para ambos esquemas.
+
 Fecha: 2026-11-05 (tarea 4.3 de FASE_4)
 
 ## Qué se verificó

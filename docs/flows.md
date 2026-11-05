@@ -23,7 +23,7 @@
 
 **Precondiciones:**
 
-- Servidor desplegado, token generado y proyecto Supabase con la migración aplicada (runbook, secciones 1 a 6)
+- Servidor desplegado, token generado y base con las migraciones aplicadas (runbook)
 - Tailscale activo en el PC de juegos
 
 **Pasos:**
@@ -89,7 +89,7 @@
 **Casos borde:**
 
 - Dos clientes conectados a la vez funcionan
-- Un reinicio no pierde datos: viven en Supabase
+- Un reinicio no pierde datos: viven en Neon
 
 **Verificación:** dos clientes simultáneos y reconexión tras cerrar otro, con el cliente real del SDK sobre HTTP real. Reinicio del contenedor en el Mac Mini: pendiente.
 

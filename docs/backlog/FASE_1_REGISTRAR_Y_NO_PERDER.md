@@ -6,7 +6,7 @@
 
 ## Estado de ejecución (2026-11-05)
 
-**Implementada y probada en local. No desplegada y no usada con datos reales.** Lo que falta exige credenciales o datos de Freddy y está en el runbook: [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md).
+**Desplegada el 2026-11-05 con base en Neon (`DECISION_BASE_NEON.md`). Sin datos reales todavía.** Operación en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md).
 
 | Tarea                                 | Estado                                                                                                                       |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -142,7 +142,7 @@ Esta fase es **cerrada**. Alcance = las 5 herramientas + esquema + versiones + f
 ### Tarea 1.11: Despliegue en el Mac Mini
 
 - Archivo: `docs/decisions/DECISION_DEPLOY.md` (crear), `README.md` (modificar). `Dockerfile` y `.dockerignore` **ya están hechos en F0** (2026-11-05).
-- **Supuesto de despliegue (2026-11-05), no ejecutado:** como `hylian-mcp` — push a GitHub, un workflow de despliegue que corre solo si el CI pasó, en el runner self-hosted del Mac Mini, y la imagen Docker queda corriendo ahí. Está sin confirmar y **esta tarea define** el repositorio, el runner y el nombre de la imagen (decidido 2026-11-05); **no se despliega hasta que Freddy lo ordene**. Diferencia a tener en cuenta: `hylian-mcp` se usa por stdio con `ssh mac-mini docker run`; ladder-lab se usa por HTTP con token y Tailscale, así que el contenedor queda corriendo de forma permanente (`--restart unless-stopped`).
+- **Reemplazado: se desplegó con `deploy/desplegar.sh` y base en Neon, sin workflow.** Supuesto original: como `hylian-mcp` — push a GitHub, un workflow de despliegue que corre solo si el CI pasó, en el runner self-hosted del Mac Mini, y la imagen Docker queda corriendo ahí. Está sin confirmar y **esta tarea define** el repositorio, el runner y el nombre de la imagen (decidido 2026-11-05); **no se despliega hasta que Freddy lo ordene**. Diferencia a tener en cuenta: `hylian-mcp` se usa por stdio con `ssh mac-mini docker run`; ladder-lab se usa por HTTP con token y Tailscale, así que el contenedor queda corriendo de forma permanente (`--restart unless-stopped`).
 - Que hacer:
   1. **Hecho en F0.** `Dockerfile`: usuario no root, solo dependencias de producción, pnpm 10 fijado, `HEALTHCHECK` contra `/healthz`. Verificado construyendo y corriendo la imagen en local.
   2. **Hecho en F0.** `.dockerignore` con `.env`, `.env.*`, `.venv/`, `__pycache__/`, `.git/`, `node_modules`, `dist`, `coverage` y más; cubierto por `src/__tests__/docker.spec.ts`.

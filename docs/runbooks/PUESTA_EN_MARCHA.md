@@ -1,159 +1,120 @@
-# Puesta en marcha de ladder-lab (lo que exige credenciales reales)
+# Puesta en marcha de ladder-lab y sens-lab
 
-Todo lo de este documento lo ejecuta **Freddy**, con sus propias credenciales. Nada se ejecutó: el código y la migración se probaron contra contenedores desechables (`scripts/test-integracion.sh`), no contra Supabase ni contra el Mac Mini. Las credenciales nunca se escriben en el repo ni se pegan en el chat.
+**Desplegado el 2026-11-05.** Base en Neon, pila en el Mac Mini, acceso solo por Tailscale. Por qué así: [`DECISION_BASE_NEON.md`](../decisions/DECISION_BASE_NEON.md).
 
-Requisitos en el equipo desde el que se ejecuta: `pnpm`, `docker`, `psql`, Supabase CLI y Tailscale.
+| qué       | dónde                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| MCP       | `https://mac-mini-server.tail1798c7.ts.net:8444/mcp`                                            |
+| sens-lab  | `https://mac-mini-server.tail1798c7.ts.net:8445`                                                |
+| Pila      | `~/apps/lab-stack` en el Mac, proyecto Compose `lab`; puertos solo en `127.0.0.1` (3011 y 3012) |
+| Secretos  | `~/.config/lab/` en ThinkPad y Mac, carpeta 700 y archivos 600. Nunca en el repo                |
+| Monitores | Uptime Kuma: `ladder-lab :3011`, `sens-lab :3012` y `respaldo lab (push diario)`                |
 
-## 1. Proyecto Supabase propio (nube)
+## Actualizar
 
-1. Crear un proyecto nuevo, **para ladder-lab** (nada de reutilizar el de otro sistema ajeno: riesgo del concepto, incidente de seguridad pendiente en el Mac Mini). **Excepción decidida por Freddy:** sens-lab, el convertidor, usa un esquema aparte (`sens_lab`) dentro de este mismo proyecto; implicaciones en `docs/decisions/DECISION_INTEGRACION_CONVERTIDOR.md` (una sola clave `service_role` abre los dos esquemas, y el respaldo de ladder-lab no cubre `sens_lab`).
-2. Anotar, fuera del repo: la URL del proyecto y la clave `service_role` (Ajustes → API). Esa clave ignora RLS: solo vive en el archivo de entorno del servidor.
-3. **Plan gratuito:** el proyecto se pausa tras una semana con poca actividad y no hay copias descargables (`docs/decisions/DECISION_MODELO_DATOS.md`, última sección). Verificar en la documentación vigente la ventana de restauración. El respaldo programado (sección 9) es obligatorio, no opcional.
-
-## 2. Aplicar la migración
-
-```bash
-supabase init            # solo si no existe supabase/config.toml; NO sobrescribe supabase/migrations
-supabase login           # interactivo, abre el navegador
-supabase link --project-ref <ref-del-proyecto>
-supabase db push         # aplica supabase/migrations/*.sql
-```
-
-Comprobar (SQL editor del proyecto o `psql` con la cadena de conexión del proyecto):
-
-```sql
-select count(*) from public.estampas_vigentes;                 -- 0, sin error
-select count(*) from pg_trigger where tgname like 'estampa%';  -- los triggers de inmutabilidad existen
--- Debe FALLAR con LL010 (si no falla, la migración no se aplicó entera):
-delete from public.estampa_versiones;
-```
-
-## 3. Token HTTP
+Desde el ThinkPad, con todo commiteado. El push no despliega solo:
 
 ```bash
-openssl rand -hex 32
+deploy/desplegar.sh                 # los dos
+deploy/desplegar.sh sens-lab        # uno
 ```
 
-Guardarlo en un gestor de contraseñas. Mínimo 32 caracteres (lo exige el arranque del servidor).
+Va por `git archive`: el Mac no recibe acceso a GitHub.
 
-## 4. Archivo de entorno en el Mac Mini
-
-Fuera del repo, p. ej. `~/.config/ladder-lab/ladder-lab.env`, con `chmod 600`:
-
-```
-MCP_TRANSPORT=http
-MCP_AUTH_TOKEN=<el token de la sección 3>
-SUPABASE_URL=<url del proyecto>
-SUPABASE_SERVICE_KEY=<clave service_role>
-LOG_LEVEL=info
-```
-
-`MCP_HOST` y `PORT` no hacen falta: la imagen ya fija `0.0.0.0` y `3000` dentro del contenedor.
-
-## 5. Probar el servidor compilado con las credenciales reales (antes de desplegar)
+## Aplicar una migración nueva
 
 ```bash
-pnpm build
-node --env-file=/ruta/a/ladder-lab.env dist/main.js     # en otra terminal:
-curl -s -o /dev/null -w '%{http_code}\n' localhost:3000/healthz                                   # 200
-curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:3000/mcp                               # 401
+psql "$(cat ~/.config/lab/owner-uri)" -X -v ON_ERROR_STOP=1 -f supabase/migrations/<archivo>.sql
+ssh mac-mini 'cd ~/apps/lab-stack && docker compose restart lab-rest'
 ```
 
-## 6. Desplegar en el Mac Mini
+El reinicio es obligatorio: PostgREST va sin LISTEN y no recarga el esquema solo.
 
-Según `docs/decisions/DECISION_DEPLOY.md` (supuesto, sin confirmar). A mano, sin workflow:
+## Conectar otro equipo al MCP
 
-```bash
-docker build -t ladder-lab:local .
-docker rm -f ladder-lab 2>/dev/null
-docker run -d --name ladder-lab --restart unless-stopped \
-  -p <ip-tailscale-del-mac>:3000:3000 \
-  --env-file ~/.config/ladder-lab/ladder-lab.env \
-  ladder-lab:local
-docker inspect -f '{{.State.Health.Status}}' ladder-lab      # healthy tras ~10 s
-```
-
-## 7. Registrar el servidor en Claude Code del PC de juegos
+El equipo debe estar en la tailnet. El token está en `~/.config/lab/secretos.json` del ThinkPad, campo `mcp`.
 
 ```bash
 claude mcp add --transport http --scope user ladder-lab \
-  http://<host-tailscale-del-mac>:3000/mcp \
+  https://mac-mini-server.tail1798c7.ts.net:8444/mcp \
   --header "Authorization: Bearer <TOKEN>"
 ```
 
-`--scope user` guarda el token en la configuración local del usuario, no en `.claude/settings.json` de ningún repo.
+`--scope user` guarda el token en la configuración del usuario, no en un repo.
 
-## 8. Comprobar de verdad (cada una debe poder fallar)
+## Respaldos
 
-| Comprobación                                         | Esperado                                                              |
-| ---------------------------------------------------- | --------------------------------------------------------------------- |
-| `curl -X POST http://<host>:3000/mcp` sin cabecera   | `401`                                                                 |
-| La misma con `Authorization: Bearer basura`          | `401` (si da 200, el servicio no autentica y todo lo demás vale cero) |
-| `curl http://<host>:3000/healthz`                    | `200`                                                                 |
-| Desde Claude Code: `/mcp`                            | `ladder-lab` conectado con las herramientas                           |
-| `crear_estampa` → `ver_estampa` → `corregir_estampa` | versión 2, y `ver_estampa` indica `totalVersiones: 2`                 |
-| `exportar` con `incluirVersiones`                    | la versión 1 sigue ahí                                                |
-| `docker logs ladder-lab`                             | ningún token ni clave                                                 |
-| Desde otro equipo fuera del tailnet                  | sin respuesta                                                         |
+| dónde                                                  | cuándo | qué                                                             |
+| ------------------------------------------------------ | ------ | --------------------------------------------------------------- |
+| Mac, launchd `dev.fmarcos.lab-respaldo`, 05:15         | diario | JSON de estampas y candidatas en `~/respaldos`; avisa a Kuma    |
+| ThinkPad, timer `lab-respaldo`, 12:00 con recuperación | diario | copia lo del Mac y hace `pg_dump` completo en `~/respaldos/lab` |
 
-## 9. Respaldo programado (FASE_3)
+Si el aviso del Mac no llega en 25 horas, Kuma alerta por Telegram. El `pg_dump` del ThinkPad usa `/usr/lib/postgresql/18/bin/pg_dump`: el `pg_dump` de Ubuntu es un wrapper que puede fallar con `PostgreSQL version 14 is not installed`.
 
-Detalle y límites en `docs/decisions/DECISION_RESPALDO.md`. En el plan gratuito de Supabase **no hay copias descargables**: este respaldo es la única red de seguridad.
-
-**Hacer un respaldo a mano** (desde el Mac Mini, con la misma imagen y el mismo archivo de entorno del servidor):
+**Restaurar `pg_dump`** en una base nueva con los mismos roles:
 
 ```bash
-mkdir -p ~/respaldos/ladder-lab
-docker run --rm --user "$(id -u):$(id -g)" \
-  --env-file ~/.config/ladder-lab/ladder-lab.env \
-  -v ~/respaldos/ladder-lab:/respaldos -e RESPALDO_DIR=/respaldos \
-  ladder-lab:local node dist/respaldo.js
-echo "código de salida: $?"     # 0 bien · 1 falló · 2 hecho pero con alerta
+/usr/lib/postgresql/18/bin/pg_restore --no-owner --no-acl -d "<uri-destino>" <archivo>.dump
 ```
 
-Debe imprimir el denominador (estampas y versiones) y dejar un `ladder-lab-AAAAMMDDTHHMMSSZ.json`. Verificarlo:
+**Restaurar el JSON** en una base con las migraciones aplicadas. Primero simula; `--aplicar` escribe:
 
 ```bash
-docker run --rm --env-file ~/.config/ladder-lab/ladder-lab.env \
+docker run --rm --network lab_default --env-file ~/.config/lab/ladder-lab.env \
   -v ~/respaldos/ladder-lab:/respaldos:ro ladder-lab:local \
-  node dist/respaldo.js --verificar /respaldos/<archivo>.json
+  node dist/restaurar.js /respaldos/<archivo>.json
 ```
 
-**Programarlo** (una vez al día basta; también mantiene activa la base): una entrada de `cron` o un `launchd` en el Mac con el primer comando. Que el programador avise si el código de salida no es 0.
+Las dos se probaron el 2026-11-05 con resultado idéntico por hash.
 
-**Copiar fuera del Mac Mini y de Supabase** (Freddy elige el destino; ninguna credencial va al repo). **Sin `--delete` a propósito**: la retención local poda archivos viejos y un espejo exacto vaciaría el respaldo externo justo cuando el local falla; la retención del destino externo es decisión de Freddy:
+## Recrear desde cero
 
-```bash
-rsync -a ~/respaldos/ladder-lab/ <destino-externo>:ladder-lab/   # o: rclone copy …
-```
+Si hay que partir de una base o un Mac nuevos:
 
-**Restaurar** (base nueva con las migraciones ya aplicadas, sección 2). Primero simular, luego aplicar:
+1. Crear el proyecto en Neon, en São Paulo, y guardar su URI directa en `~/.config/lab/owner-uri`.
+2. Crear los roles, con una clave nueva para `authenticator`:
 
-```bash
-docker run --rm --env-file <entorno-de-la-base-destino> -v ~/respaldos/ladder-lab:/respaldos:ro \
-  ladder-lab:local node dist/restaurar.js /respaldos/<archivo>.json            # simula
-docker run --rm --env-file <entorno-de-la-base-destino> -v ~/respaldos/ladder-lab:/respaldos:ro \
-  ladder-lab:local node dist/restaurar.js /respaldos/<archivo>.json --aplicar  # restaura
-```
+   ```sql
+   create role anon nologin;
+   create role authenticated nologin;
+   create role service_role nologin bypassrls;
+   create role authenticator noinherit login password '<clave>';
+   grant anon, authenticated, service_role to authenticator;
+   ```
 
-**Prueba obligatoria antes de confiar en el respaldo:** restaurar un respaldo real en un proyecto Supabase de prueba vacío y comparar con `exportar`. Un respaldo que nunca se restauró no está probado.
+3. Aplicar las migraciones de ladder-lab y luego las de sens-lab, en orden, con `psql`.
+4. Guardar la clave en `~/.config/lab/authenticator-password` y crear `~/.config/lab/secretos.json` con `jwt` y `mcp` (`openssl rand -hex 32` cada uno).
+5. Generar los entornos: `python3 deploy/generar-entornos.py ~/.config/lab/owner-uri ~/.config/lab/authenticator-password`.
+6. Copiar `rest.env`, `ladder-lab.env` y `sens-lab.env` al Mac, en `~/.config/lab/`, y correr `deploy/desplegar.sh`.
+7. Publicar por la tailnet en el Mac:
 
-## 10. Uso real y congelar el formato (tarea 1.12 y compuerta de F2)
+   ```bash
+   tailscale serve --bg --https=8444 http://127.0.0.1:3011
+   tailscale serve --bg --https=8445 http://127.0.0.1:3012
+   ```
 
-1. Cargar estampas reales con `crear_estampa`. Anotar en `docs/flows.md` lo que no se entienda o resulte torpe.
-2. Con las primeras estampas reales, revisar `docs/decisions/DECISION_FORMATO_ESTAMPA_V1.md` y marcar el formato como **congelado** con fecha. Desde ahí un cambio incompatible exige `version: 2` y un migrador (`DECISION_VERSIONADO_FORMATO.md`).
-3. Hacer un `exportar` con `incluirVersiones` y comprobar a mano que reconstruye los datos.
-4. Umbral de «F1 en uso»: 10 estampas reales. La compuerta de F2 se levantó por orden de Freddy el 2026-11-05 sin cumplirlo; ver `docs/decisions/DECISION_COMPUERTA_F2.md`.
+8. Instalar el plist `dev.fmarcos.lab-respaldo` en el Mac y `lab-respaldo.service` y `.timer` en el ThinkPad.
 
-## Rotación del token y reversa
+## Comprobar de verdad
 
-- **Rotar el token:** generar uno nuevo, cambiarlo en el archivo de entorno y en `claude mcp add` (`claude mcp remove ladder-lab` y volver a agregar), reiniciar el contenedor. El anterior deja de valer al instante.
-- **Volver atrás:** `docker rm -f ladder-lab`. Los datos no se tocan (están en Supabase y las versiones no se pueden borrar).
+| comprobación                                         | esperado                                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------------------------- |
+| `curl -X POST <mcp>` sin cabecera                    | `401`                                                                     |
+| La misma con `Authorization: Bearer basura`          | `401`                                                                     |
+| `curl <ip-tailscale>:3011/healthz` directo           | sin respuesta: solo entra por `tailscale serve`                           |
+| `claude mcp get ladder-lab`                          | `Connected`                                                               |
+| `delete from public.estampa_versiones` **con filas** | error de inmutabilidad; con la tabla vacía da `DELETE 0` y no prueba nada |
+| `docker compose logs`                                | ningún token ni clave                                                     |
 
-## Qué no se pudo verificar sin credenciales
+**No hagas pruebas contra `lab`:** las estampas no se pueden borrar. Usá un proyecto desechable.
 
-- La migración contra un proyecto Supabase real (sí contra la imagen oficial de Supabase Postgres y PostgREST).
-- El repositorio de `supabase-js` contra la API real de Supabase (sí contra PostgREST real, con el mismo contrato que el doble).
-- La conexión por Tailscale desde el PC de juegos y el despliegue en el Mac Mini.
-- El comportamiento de pausa e inactividad del plan gratuito.
-- El respaldo y la restauración contra un proyecto Supabase real y con una carpeta externa real (sí contra Postgres de Supabase real en contenedor y dentro de la imagen Docker).
+## Uso real y congelar el formato
+
+1. Cargar estampas reales con `crear_estampa` y anotar en `docs/flows.md` lo torpe.
+2. Con las primeras reales, revisar `DECISION_FORMATO_ESTAMPA_V1.md` y marcarlo **congelado** con fecha. Desde ahí un cambio incompatible exige `version: 2` y un migrador.
+3. Umbral de «F1 en uso»: 10 estampas reales. La compuerta de F2 se levantó sin cumplirlo (`DECISION_COMPUERTA_F2.md`).
+
+## Rotar y volver atrás
+
+- **Token del MCP:** cambiarlo en `secretos.json`, regenerar entornos, copiarlos al Mac, `docker compose up -d --force-recreate` y volver a registrar el MCP.
+- **Volver atrás:** `docker compose down` en `~/apps/lab-stack`. Los datos siguen en Neon.

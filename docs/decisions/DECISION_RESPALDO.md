@@ -2,6 +2,8 @@
 
 Fecha: 2026-11-05 (tareas 3.2, 3.3 y 3.4 de FASE_3)
 
+**En marcha desde el 2026-11-05:** programado en Mac y ThinkPad, copia fuera del Mac y restauración probada. Donde este documento dice Supabase, hoy la base es Neon (`DECISION_BASE_NEON.md`). Operación en `docs/runbooks/PUESTA_EN_MARCHA.md`.
+
 ## Qué dice el concepto
 
 «Son horas de juego convertidas en datos: no se pueden perder.» Riesgo declarado: dependencia de Supabase, mitigada con `exportar` desde F1. F3 agrega respaldo programado e importar desde JSON.

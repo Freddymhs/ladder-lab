@@ -4,18 +4,18 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 
 ## Estado actual
 
-**F0 cerrada el 2026-11-05** (8 de 8 tareas). **F1 a F4 implementadas y probadas en local el 2026-11-05**; **nada desplegado ni usado con datos reales**. Lo que falta es de Freddy: ver «Pendientes reales» abajo y [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md). Detalle en cada FASE, sección «Estado de ejecución».
+**F0 a F4 implementadas. Desplegado el 2026-11-05 en el Mac Mini con base en Neon** (`DECISION_BASE_NEON.md`), sin datos reales todavía. Operación en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md); lo abierto, en «Pendientes reales».
 **Orden de fases acordado (2026-11-05):** F0 → F1 → **F3** → F2 → F4. F3 va antes que F2.
 
 ## Fases
 
-| Fase                                        | Nombre                                                      | Estado                                                          | Tareas | Fuente                                      |
-| ------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------- | ------ | ------------------------------------------- |
-| [FASE_0](./FASE_0_BASE.md)                  | Base (huecos de la plantilla)                               | **cerrada**                                                     | 8      | plantilla `template-mcp` vs concepto, Stack |
-| [FASE_1](./FASE_1_REGISTRAR_Y_NO_PERDER.md) | Registrar y no perder (**PROTEGIDA**)                       | implementada y probada en local; falta desplegar y usar         | 12     | concepto F1                                 |
-| [FASE_3](./FASE_3_CUIDAR_DATOS.md)          | Cuidar los datos (**va antes que F2**)                      | implementada y probada en local; falta programar y copiar fuera | 4      | concepto F3                                 |
-| [FASE_2](./FASE_2_CONCLUSIONES.md)          | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales               | 6      | concepto F2                                 |
-| [FASE_4](./FASE_4_CONVERTIDOR.md)           | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real  | 3      | concepto F4                                 |
+| Fase                                        | Nombre                                                      | Estado                                                         | Tareas | Fuente                                      |
+| ------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- | ------ | ------------------------------------------- |
+| [FASE_0](./FASE_0_BASE.md)                  | Base (huecos de la plantilla)                               | **cerrada**                                                    | 8      | plantilla `template-mcp` vs concepto, Stack |
+| [FASE_1](./FASE_1_REGISTRAR_Y_NO_PERDER.md) | Registrar y no perder (**PROTEGIDA**)                       | desplegada; falta uso real                                     | 12     | concepto F1                                 |
+| [FASE_3](./FASE_3_CUIDAR_DATOS.md)          | Cuidar los datos (**va antes que F2**)                      | en marcha: respaldo programado, copia fuera y restauración ok  | 4      | concepto F3                                 |
+| [FASE_2](./FASE_2_CONCLUSIONES.md)          | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales              | 6      | concepto F2                                 |
+| [FASE_4](./FASE_4_CONVERTIDOR.md)           | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real | 3      | concepto F4                                 |
 
 Total: **33 tareas** en 5 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
 
@@ -26,7 +26,7 @@ Vienen del concepto y de las órdenes de Freddy. Las fases las dan por hechas.
 - La **estampa** es la unidad principal; cada una es independiente.
 - Las **versiones** no se borran: corregir crea una versión nueva y conserva la anterior; ninguna estampa se borra de verdad, se archiva.
 - Acceso por **HTTP con token, solo por Tailscale**, en el Mac Mini M1 (Streamable HTTP).
-- Datos: **`supabase-js` con migraciones SQL**, proyecto Supabase propio **en la nube** (2026-11-05).
+- Datos: **`supabase-js` con migraciones SQL**, en la nube. Base en **Neon** con PostgREST propio desde el 2026-11-05 (`DECISION_BASE_NEON.md`).
 - Formato común: **JSON versionado**, esquema Zod; única conexión con el convertidor.
 - Stack de base: `template-mcp`, TypeScript, Node 22, Zod, Vitest. No se re-decide.
 
@@ -66,21 +66,21 @@ F1 es la única fase con prioridad hasta tener datos reales. Su alcance está ce
 
 ## Pendientes reales
 
-Todo el código y los documentos están hechos y probados en local. **No se desplegó nada y nada se ejecutó contra un Supabase real ni contra el Mac Mini**: exige credenciales y decisiones de Freddy. Pasos exactos en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md). Fecha: 2026-11-05. Cada punto se lee solo; se cierra cuando Freddy lo confirma.
+Desplegado y verificado el 2026-11-05. Lo que sigue depende de uso real o de una decisión de Freddy.
 
-1. **Aplicar las migraciones y desplegar (tareas 1.3 y 1.11).** Hay dos migraciones SQL escritas y probadas contra Postgres de Supabase y PostgREST reales en contenedor, pero ninguna se aplicó a un proyecto Supabase real, y el servidor no corre en el Mac Mini. Decisión provisional: despliegue como `hylian-mcp` (push, CI, runner del Mac), solo como supuesto, con el workflow de despliegue como borrador **fuera** de `.github/` (`DECISION_DEPLOY.md`). Flojo: organización, repositorio y runner sin confirmar. Pregunta: ¿cuándo quieres que se aplique y desplegue, y con qué repositorio y runner?
+1. **Poner F1 en uso y congelar el formato (tarea 1.12).** Sin estampas reales el formato v1 sigue sin congelar. Decisión provisional: abierto, y todo cambio sigue `DECISION_VERSIONADO_FORMATO.md`.
 
-2. **Poner F1 en uso y congelar el formato (tarea 1.12).** Sin estampas reales no se puede congelar el formato v1 (la especificación dice «no congelado»). Decisión provisional: el formato queda abierto y cualquier cambio sigue `DECISION_VERSIONADO_FORMATO.md`. Flojo: los tipos de valor propuestos (`resolucion` como `ANCHOxALTO`, `posicionWindows` de 1 a 11) y el nombre `numeroVersion` son propuesta. Pregunta: ¿cargas las primeras estampas reales y marcas el formato como congelado cuando te cierre?
+2. **Clave única para ambos esquemas.** La clave de servidor abre `public` y `sens_lab`. Decisión provisional: se mantiene. El respaldo JSON de ladder-lab no cubre `sens_lab`, pero el `pg_dump` diario del ThinkPad cubre ambos.
 
-3. **Programar el respaldo y copiarlo fuera (tarea 3.2 y 3.4).** El comando `pnpm respaldo` está hecho y verificado (también la restauración en una base vacía real en contenedor), pero falta la tarea programada, el destino **fuera del Mac Mini y de Supabase**, y restaurar un respaldo real en un proyecto Supabase de prueba. Es la única red de seguridad: el plan gratuito no da copias descargables y pausa el proyecto inactivo (`DECISION_RESPALDO.md`). Pregunta: ¿qué destino externo usarás y cuándo se programa?
+3. **Revisar F2 con datos reales.** La compuerta se levantó sin las 10 estampas reales (`DECISION_COMPUERTA_F2.md`). La forma de las salidas de F2 es una primera versión.
 
-4. **Supabase compartido con sens-lab.** sens-lab usa un esquema `sens_lab` dentro del mismo proyecto. Decisión provisional: se respeta (es decisión tuya) y está documentado en `DECISION_INTEGRACION_CONVERTIDOR.md`. Flojo: una sola clave `service_role` abre los dos esquemas, el respaldo de ladder-lab no cubre `sens_lab`, y la pausa por inactividad afecta a los dos productos. Pregunta: ¿aceptas ese riesgo compartido o prefieres un proyecto aparte para sens-lab?
+4. **Tres nombres que Freddy no confirmó:** `numeroVersion`, el campo `archivada: true` en la exportación y que la exportación incluya las archivadas (`DECISION_FORMATO_ESTAMPA_V1.md`).
 
-5. **Revisar F2 con datos reales.** La compuerta de F2 se levantó por orden tuya sin las 10 estampas reales (`DECISION_COMPUERTA_F2.md`); la forma de las salidas de `comparar_estampas`, `historial_versiones`, `matches_perfectos` y `mejor_por_juego` es una primera propuesta, y los índices se midieron con datos sintéticos. Decisión provisional: se deja como está. Pregunta: cuando existan las 10 estampas, ¿revisamos qué herramientas se usan y recortamos las que no?
+5. **Falta herramienta para desarchivar.** El concepto solo nombra «archivar». Pregunta: ¿necesitás poder desarchivar?
 
-6. **Tres nombres propios de ladder-lab que Freddy no confirmó:** `numeroVersion` (versión dentro del respaldo), el campo `archivada: true` en la exportación y que la exportación incluya las archivadas (`DECISION_FORMATO_ESTAMPA_V1.md`). Ya están implementados y publicados; cambiarlos cuesta una versión del formato. Pregunta: ¿los aceptas tal cual?
+6. **Conectar el PC de juegos al MCP.** Al llegar a Arica, con el equipo en la tailnet (runbook, «Conectar otro equipo»).
 
-7. **Falta herramienta para desarchivar.** El concepto solo nombra «archivar». Decisión provisional: no existe y se anota en el ADR. Pregunta: ¿necesitas poder desarchivar?
+7. **Sacar `/Library/LaunchDaemons/com.finder.helper.plist` del Mac Mini.** Pide sudo. La clave de servidor y el token ya viven en ese Mac.
 
 ## Diagramas de Referencia
 

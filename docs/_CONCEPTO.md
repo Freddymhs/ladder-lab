@@ -84,7 +84,7 @@ Sin datos reales no se construye F2: F1 debe estar en uso antes.
 | Base       | `template-mcp`, TypeScript, Node 22 | `[feature]`           |
 | Transporte | Streamable HTTP en Mac Mini M1      | `[feature]`           |
 | Acceso     | solo Tailscale, con token           | `[feature]`           |
-| Datos      | proyecto Supabase propio            | `[feature]`           |
+| Datos      | Neon + PostgREST propio (ver abajo) | `[feature]`           |
 | Cliente    | `supabase-js` con migraciones SQL   | `[feature]` `[norte]` |
 | Validación | Zod                                 | `[feature]`           |
 | Pruebas    | Vitest                              | `[feature]`           |
@@ -104,6 +104,6 @@ Interfaz web, cuentas, recomendaciones, conversión de sensibilidad, sincronizac
 
 - **Sobrediseño:** comparaciones antes de tener datos. Se mitiga protegiendo F1.
 - **Registro con datos pobres:** recuerdos incompletos. Se mitiga con `desconocido` y certeza.
-- **Dependencia de Supabase:** se mitiga con `exportar` desde F1.
+- **Dependencia de la base:** se mitiga con `exportar` desde F1. Desde el 2026-11-05 la base es Neon: `docs/decisions/DECISION_BASE_NEON.md`.
 - **Mac Mini:** decisión de Freddy. Por su incidente de seguridad pendiente, el proyecto usa una base y credenciales propias, sin compartir con otros sistemas.
 - **Conexión con el convertidor:** cambios de formato sin versión. Se mitiga con el campo `version`.

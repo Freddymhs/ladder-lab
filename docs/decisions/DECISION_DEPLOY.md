@@ -1,7 +1,7 @@
-# DECISION: Despliegue en el Mac Mini como `hylian-mcp` — SUPUESTO, NO EJECUTADO
+# DECISION: Despliegue en el Mac Mini
 
 Fecha: 2026-11-05 (tarea 1.11 de FASE_1)
-**Estado: propuesta sin confirmar. No se desplegó nada.** Todo lo que sigue está escrito, pero ningún comando de este documento se ejecutó contra el Mac Mini ni contra una cuenta de Supabase, GitHub u otro servicio.
+**Estado: desplegado el 2026-11-05, a mano con `deploy/desplegar.sh`.** No se usó el runner ni un workflow: el push no despliega. Base en Neon (`DECISION_BASE_NEON.md`) y pasos en `docs/runbooks/PUESTA_EN_MARCHA.md`. Lo que sigue es el análisis original del supuesto `hylian-mcp`, que no se adoptó.
 
 ## Qué dice el concepto
 

@@ -1,0 +1,8 @@
+[Unit]
+Description=Copia de ladder-lab y sens-lab fuera del Mac y de Neon
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/lab/respaldar-thinkpad.sh

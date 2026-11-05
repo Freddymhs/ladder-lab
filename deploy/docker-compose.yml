@@ -1,0 +1,45 @@
+# Pila de ladder-lab y sens-lab en el Mac Mini. La base vive en Neon.
+# Secretos fuera del repo, en ~/.config/lab/*.env (600). Ver docs/runbooks/PUESTA_EN_MARCHA.md.
+name: lab
+
+services:
+  lab-rest:
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    restart: unless-stopped
+    mem_limit: 128m
+    env_file: ${HOME}/.config/lab/rest.env
+    environment:
+      PGRST_DB_SCHEMAS: public,sens_lab
+      PGRST_DB_ANON_ROLE: anon
+      # Sin LISTEN y sin conexiones ociosas: si no, Neon nunca duerme y se agotan
+      # las horas de cómputo del plan gratis. Tras migrar: docker compose restart lab-rest.
+      PGRST_DB_CHANNEL_ENABLED: 'false'
+      PGRST_DB_POOL: '3'
+      PGRST_DB_POOL_MAX_IDLETIME: '30'
+      PGRST_DB_MAX_ROWS: '1000'
+
+  lab-proxy:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    mem_limit: 32m
+    depends_on: [lab-rest]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  ladder-lab:
+    image: ladder-lab:local
+    restart: unless-stopped
+    mem_limit: 192m
+    depends_on: [lab-proxy]
+    env_file: ${HOME}/.config/lab/ladder-lab.env
+    ports:
+      - '127.0.0.1:3011:3000'
+
+  sens-lab:
+    image: sens-lab:local
+    restart: unless-stopped
+    mem_limit: 320m
+    depends_on: [lab-proxy]
+    env_file: ${HOME}/.config/lab/sens-lab.env
+    ports:
+      - '127.0.0.1:3012:3000'
