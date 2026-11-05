@@ -1,0 +1,57 @@
+{
+  "project": "ladder-lab",
+  "tech": "node22-typescript-mcp-supabase",
+  "current_phase": "FASE_1",
+  "phases": {
+    "FASE_0": {
+      "status": "done",
+      "tasks": 8,
+      "total": 8,
+      "name": "Base (huecos de la plantilla)"
+    },
+    "FASE_1": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 12,
+      "name": "Registrar y no perder",
+      "protected": true
+    },
+    "FASE_2": {
+      "status": "blocked",
+      "tasks": 0,
+      "total": 6,
+      "name": "Conclusiones",
+      "blocked_by": "10 estampas reales en F1 (decidido 2026-11-05) y F3 hecha antes"
+    },
+    "FASE_3": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 4,
+      "name": "Cuidar los datos",
+      "note": "va antes que F2 (decidido 2026-11-05)"
+    },
+    "FASE_4": {
+      "status": "pending",
+      "tasks": 0,
+      "total": 3,
+      "name": "Integracion con el convertidor"
+    }
+  },
+  "totals": {
+    "tasks_done": 8,
+    "tasks_total": 33
+  },
+  "meta": {
+    "generated_at": "2026-11-05",
+    "source_concept": "docs/_CONCEPTO.md",
+    "backlog_dir": "docs/backlog",
+    "testsprite_enabled": false,
+    "flows_doc": "docs/flows.md",
+    "open_questions": 1,
+    "execution_order": ["FASE_0", "FASE_1", "FASE_3", "FASE_2", "FASE_4"],
+    "updated_at": "2026-11-05",
+    "deploy_status": "no desplegado; supuesto como hylian-mcp (FASE_1 1.11)",
+    "f0_closed_at": "2026-11-05",
+    "adr_formato_v1": "revisado en sesion de control, pendiente de confirmacion de Freddy"
+  }
+}

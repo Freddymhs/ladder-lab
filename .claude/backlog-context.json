@@ -1,0 +1,44 @@
+{
+  "_nota": "Derivado de docs/_CONCEPTO.md y de la plantilla template-mcp el 2026-11-05. No pasó por el cuestionario interactivo: Freddy lo dio por cerrado en el pedido. Sin credenciales.",
+  "derivado": true,
+  "confirmado_por_usuario": false,
+  "framework": "Servidor MCP (Node 22, TypeScript strict, ESM, @modelcontextprotocol/sdk)",
+  "arquitectura": {
+    "patron": "Simple por capas: http -> McpServer -> tools -> domain (Zod) -> data (repositorio) -> supabase-js",
+    "patrones_diseno": [
+      "Factory (createServer)",
+      "Repository",
+      "Inyeccion de dependencias por parametro"
+    ]
+  },
+  "seguridad": {
+    "acceso": "Token Bearer sobre HTTP, solo por Tailscale; escucha en la interfaz de Tailscale",
+    "validacion": "Zod en el borde de cada herramienta y de cada fila leida",
+    "secrets": ".env en el host, fuera del repo y de la imagen; .env.example solo con placeholders",
+    "base_de_datos": "RLS activado sin politicas; solo el servidor con clave de servicio (propuesta, ADR 1.3)"
+  },
+  "resiliencia": "exportar desde F1; respaldo programado y restauracion probada en F3",
+  "testing": [
+    "Vitest unit con InMemoryTransport",
+    "HTTP real en puerto efimero",
+    "integracion contra Postgres de pruebas dedicado (opt-in)"
+  ],
+  "deploy": {
+    "plataforma": "Docker en Mac Mini M1",
+    "desarrollo": "ThinkPad",
+    "cliente": "Claude Code en PC de juegos",
+    "bd": "Supabase propio en la nube (decidido 2026-11-05)",
+    "observabilidad": "Pino a stderr",
+    "supuesto": "Despliegue como hylian-mcp (push, CI, runner self-hosted del Mac Mini); sin confirmar y sin ejecutar"
+  },
+  "servicios_externos": ["Supabase"],
+  "especiales": [],
+  "fuera_de_alcance_v1": [
+    "interfaz web",
+    "cuentas",
+    "recomendaciones",
+    "conversion de sensibilidad",
+    "sincronizacion automatica con juegos",
+    "lectura automatica de configuraciones"
+  ]
+}
