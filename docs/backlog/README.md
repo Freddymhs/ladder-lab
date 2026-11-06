@@ -80,8 +80,6 @@ Desplegado y verificado el 2026-11-05. Lo que sigue depende de uso real o de una
 
 6. **Conectar el PC de juegos al MCP.** Al llegar a Arica, con el equipo en la tailnet (runbook, «Conectar otro equipo»).
 
-7. **Sacar `/Library/LaunchDaemons/com.finder.helper.plist` del Mac Mini.** Pide sudo. La clave de servidor y el token ya viven en ese Mac.
-
 ## Diagramas de Referencia
 
 | Archivo                                                                        | Tipo                 | Contenido                                                                              |
