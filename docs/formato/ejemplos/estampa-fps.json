@@ -12,7 +12,7 @@
     "polling": 1000,
     "resolucion": "1920x1080",
     "hz": 240,
-    "posicionWindows": 6,
+    "punteroWindows": 10,
     "aceleracionWindows": "apagada"
   },
   "enJuego": { "sensibilidad": "desconocido", "rawInput": "apagado" },

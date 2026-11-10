@@ -35,7 +35,7 @@ Estado: v1, **no congelado** hasta que Freddy lo marque con datos reales (`docs/
         "polling": 1000,
         "resolucion": "1920x1080",
         "hz": 240,
-        "posicionWindows": 6,
+        "punteroWindows": 10,
         "aceleracionWindows": "apagada"
       },
       "enJuego": { "sensibilidad": 1.8, "rawInput": "encendido" },
@@ -76,7 +76,7 @@ Columnas: **obligatorio** (`sí` / `no` / `solo exportación`), y si el campo ac
 | `sistema.polling`            | entero > 0 (Hz)                    | sí               | sí          | no        |                                                                     |
 | `sistema.resolucion`         | `ANCHOxALTO`, p. ej. `1920x1080`   | sí               | sí          | no        |                                                                     |
 | `sistema.hz`                 | entero > 0                         | sí               | sí          | no        | frecuencia del monitor                                              |
-| `sistema.posicionWindows`    | entero de 1 a 11                   | sí               | sí          | no        | velocidad del puntero de Windows                                    |
+| `sistema.punteroWindows`     | entero de 1 a 20                   | sí               | sí          | no        | velocidad del puntero de Windows (valor de `MouseSensitivity`)      |
 | `sistema.aceleracionWindows` | `encendida` o `apagada`            | sí               | sí          | no        |                                                                     |
 | `sistema.versionWindows`     | texto                              | no               | no          | no        |                                                                     |
 | `enJuego.sensibilidad`       | número > 0                         | sí               | sí          | sí        | `no_aplica` si el juego no la tiene                                 |
@@ -109,7 +109,7 @@ Un RTS sin sensibilidad ni raw input, con el DPI sin recordar y derivado de otra
     "polling": 1000,
     "resolucion": "2560x1440",
     "hz": 144,
-    "posicionWindows": 6,
+    "punteroWindows": 10,
     "aceleracionWindows": "apagada",
     "versionWindows": "Windows 11"
   },

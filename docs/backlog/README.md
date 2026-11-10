@@ -16,8 +16,9 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 | [FASE_3](./FASE_3_CUIDAR_DATOS.md)          | Cuidar los datos (**va antes que F2**)                      | en marcha: respaldo programado, copia fuera y restauración ok  | 4      | concepto F3                                 |
 | [FASE_2](./FASE_2_CONCLUSIONES.md)          | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales              | 6      | concepto F2                                 |
 | [FASE_4](./FASE_4_CONVERTIDOR.md)           | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real | 3      | concepto F4                                 |
+| [FASE_5](./FASE_5_PUNTERO_EN_20_PUNTOS.md)  | Velocidad del puntero en 20 puntos                          | 5.1 a 5.5 hechas; falta push, CI y despliegue (2026-11-10)     | 7      | orden de Freddy del 2026-11-10              |
 
-Total: **33 tareas** en 5 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
+Total: **40 tareas** en 6 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
 
 ## Decisiones cerradas (no se reabren)
 

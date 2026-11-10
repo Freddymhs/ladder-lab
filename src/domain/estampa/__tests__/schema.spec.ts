@@ -56,7 +56,7 @@ describe('datosEstampaSchema — obligatorios', () => {
     ['sistema', 'polling'],
     ['sistema', 'resolucion'],
     ['sistema', 'hz'],
-    ['sistema', 'posicionWindows'],
+    ['sistema', 'punteroWindows'],
     ['sistema', 'aceleracionWindows'],
     ['enJuego', 'sensibilidad'],
     ['enJuego', 'rawInput'],
@@ -94,7 +94,7 @@ describe('datosEstampaSchema — desconocido', () => {
     ['sistema', 'polling'],
     ['sistema', 'resolucion'],
     ['sistema', 'hz'],
-    ['sistema', 'posicionWindows'],
+    ['sistema', 'punteroWindows'],
     ['sistema', 'aceleracionWindows'],
     ['enJuego', 'sensibilidad'],
     ['enJuego', 'rawInput'],
@@ -161,7 +161,7 @@ describe('datosEstampaSchema — no_aplica', () => {
     ['sistema', 'polling'],
     ['sistema', 'resolucion'],
     ['sistema', 'hz'],
-    ['sistema', 'posicionWindows'],
+    ['sistema', 'punteroWindows'],
     ['sistema', 'aceleracionWindows'],
     ['juego', 'fecha'],
     ['resultado', 'certeza'],
@@ -218,8 +218,9 @@ describe('datosEstampaSchema — tipos y rangos', () => {
     ['sistema', 'dpi', -400],
     ['sistema', 'dpi', 450.5],
     ['sistema', 'dpi', '450'],
-    ['sistema', 'posicionWindows', 0],
-    ['sistema', 'posicionWindows', 12],
+    ['sistema', 'punteroWindows', 0],
+    ['sistema', 'punteroWindows', 21],
+    ['sistema', 'punteroWindows', 2.5],
     ['sistema', 'resolucion', '1920*1080'],
     ['sistema', 'resolucion', '1920x'],
     ['sistema', 'aceleracionWindows', 'on'],
@@ -236,14 +237,26 @@ describe('datosEstampaSchema — tipos y rangos', () => {
     ).toBe(false);
   });
 
-  it('acepta los extremos válidos de posicionWindows', () => {
-    for (const posicion of [1, 11]) {
+  it('acepta punteroWindows de 1 a 20, incluido el 9 de la base real', () => {
+    for (const puntero of [1, 9, 10, 20]) {
       expect(
         datosEstampaSchema.safeParse(
-          conCambio('sistema', 'posicionWindows', posicion),
+          conCambio('sistema', 'punteroWindows', puntero),
         ).success,
       ).toBe(true);
     }
+  });
+
+  it('rechaza posicionWindows (el nombre viejo) con un error que nombra el campo', () => {
+    const { punteroWindows, ...sistemaSinPuntero } = base().sistema;
+    const resultado = datosEstampaSchema.safeParse({
+      ...base(),
+      sistema: { ...sistemaSinPuntero, posicionWindows: punteroWindows },
+    });
+    expect(resultado.success).toBe(false);
+    expect(JSON.stringify(resultado.error?.issues)).toContain(
+      'posicionWindows',
+    );
   });
 
   it('rechaza claves desconocidas: juegoDelLogro ya no existe', () => {

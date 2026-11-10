@@ -6,6 +6,7 @@ import {
   documentoExportadoSchema,
   envoltorioExportSchema,
 } from '../schema.js';
+import { PUNTERO_WINDOWS_MAX, PUNTERO_WINDOWS_MIN } from '../constants.js';
 import { clonar, leerEjemplo } from './fixtures.js';
 
 const ESPECIFICACION = readFileSync(
@@ -208,5 +209,16 @@ describe('la especificación publicada no miente', () => {
       expect(ESPECIFICACION).toContain(nombre);
       expect(() => leerEjemplo(nombre)).not.toThrow();
     }
+  });
+});
+
+describe('especificación publicada: rango del puntero de Windows', () => {
+  it('la tabla dice el mismo rango que las constantes del esquema', () => {
+    const fila = ESPECIFICACION.split('\n').find((linea) =>
+      linea.includes('`sistema.punteroWindows`'),
+    );
+    expect(fila).toContain(
+      `entero de ${PUNTERO_WINDOWS_MIN} a ${PUNTERO_WINDOWS_MAX}`,
+    );
   });
 });

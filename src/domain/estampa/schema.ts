@@ -11,8 +11,8 @@ import {
   NO_APLICA,
   PATRON_FECHA,
   PATRON_RESOLUCION,
-  POSICION_WINDOWS_MAX,
-  POSICION_WINDOWS_MIN,
+  PUNTERO_WINDOWS_MAX,
+  PUNTERO_WINDOWS_MIN,
 } from './constants.js';
 
 const esFechaReal = (valor: string): boolean => {
@@ -75,9 +75,11 @@ const sistemaSchema = z
       z.string().regex(PATRON_RESOLUCION, 'Usa ANCHOxALTO, p. ej. 1920x1080'),
     ),
     hz: oDesconocido(z.number().int().positive()).describe('Hz del monitor'),
-    posicionWindows: oDesconocido(
-      z.number().int().min(POSICION_WINDOWS_MIN).max(POSICION_WINDOWS_MAX),
-    ).describe('Velocidad del puntero de Windows, 1 a 11'),
+    punteroWindows: oDesconocido(
+      z.number().int().min(PUNTERO_WINDOWS_MIN).max(PUNTERO_WINDOWS_MAX),
+    ).describe(
+      'Velocidad del puntero de Windows, 1 a 20 (valor de MouseSensitivity)',
+    ),
     aceleracionWindows: z.enum([...ACELERACIONES_WINDOWS, DESCONOCIDO]),
     versionWindows: textoLibre.optional(),
   })

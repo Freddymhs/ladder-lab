@@ -1,7 +1,7 @@
 {
   "project": "ladder-lab",
   "tech": "node22-typescript-mcp-supabase",
-  "current_phase": "DONE_WITH_PENDING_OWNER",
+  "current_phase": "FASE_5",
   "phases": {
     "FASE_0": {
       "status": "done",
@@ -53,6 +53,16 @@
       "pending_owner": [
         "exportacion con estampas reales",
         "sens-lab en ejecucion"
+      ]
+    },
+    "FASE_5": {
+      "status": "in_progress",
+      "tasks": 5,
+      "total": 7,
+      "name": "Velocidad del puntero en 20 puntos",
+      "pending": [
+        "5.6 sellar, push, CI y despliegue",
+        "5.7 comprobar en el servidor desplegado"
       ]
     }
   },

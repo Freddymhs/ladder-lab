@@ -105,7 +105,7 @@
 
 **Pasos:**
 
-1. Pedir a Claude que registre una estampa con todos los datos (juego, género, etapa o fecha, mouse en un solo texto, DPI, polling, resolución, Hz, posición y aceleración de Windows, sensibilidad, raw input, rango, certeza)
+1. Pedir a Claude que registre una estampa con todos los datos (juego, género, etapa o fecha, mouse en un solo texto, DPI, polling, resolución, Hz, puntero y aceleración de Windows, sensibilidad, raw input, rango, certeza)
 
 **Resultado esperado:**
 

@@ -32,34 +32,34 @@ Alternativa descartada: envolver cada campo como `{ "estado": …, "valor": … 
 
 ## Campos
 
-«Obligatorio» = debe estar presente. La columna `desconocido` dice si acepta esa cadena. Los tipos de valor (rangos, `ANCHOxALTO`, `1–11`) son propuesta; no vienen del concepto.
+«Obligatorio» = debe estar presente. La columna `desconocido` dice si acepta esa cadena. Los tipos de valor (rangos, `ANCHOxALTO`, `1–20`) son propuesta; no vienen del concepto.
 
-| Bloque    | Campo                | Tipo del valor                        | `desconocido` | `no_aplica` | Notas                                                                                                                         |
-| --------- | -------------------- | ------------------------------------- | ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| raíz      | `formato`            | `"ladder-lab.estampa"`                | no            | no          | Constante                                                                                                                     |
-| raíz      | `version`            | entero (`1`)                          | no            | no          | Versión del formato, no de la estampa                                                                                         |
-| raíz      | `id`                 | texto (uuid)                          | no            | no          | **Siempre presente en toda exportación**; no se acepta como entrada de `crear_estampa` (lo genera la base). Ver «Exportación» |
-| raíz      | `derivadaDe`         | el `id` de otra estampa               | no            | no          | **Opcional.** Referencia a un `id`. Ver «derivadaDe»                                                                          |
-| raíz      | `notas`              | texto                                 | no            | no          | Opcional                                                                                                                      |
-| juego     | `nombre`             | texto no vacío                        | **no**        | no          | Obligatorio                                                                                                                   |
-| juego     | `genero`             | `FPS` \| `RTS`                        | **no**        | no          | Obligatorio. Solo esos dos valores                                                                                            |
-| juego     | `etapa`              | texto no vacío                        | sí            | no          | Al menos `etapa` o `fecha` presente                                                                                           |
-| juego     | `fecha`              | `YYYY-MM-DD`                          | sí            | no          | Al menos `etapa` o `fecha` presente                                                                                           |
-| sistema   | `mouse`              | texto: marca y modelo                 | sí            | no          | Obligatorio. Una sola casilla                                                                                                 |
-| sistema   | `dpi`                | entero > 0                            | sí            | no          | Obligatorio                                                                                                                   |
-| sistema   | `polling`            | entero > 0 (Hz)                       | sí            | no          | Obligatorio                                                                                                                   |
-| sistema   | `resolucion`         | `"ANCHOxALTO"` (p. ej. `1920x1080`)   | sí            | no          | Obligatorio                                                                                                                   |
-| sistema   | `hz`                 | entero > 0                            | sí            | no          | Frecuencia del monitor. Obligatorio                                                                                           |
-| sistema   | `posicionWindows`    | entero 1–11                           | sí            | no          | Velocidad del puntero. Obligatorio                                                                                            |
-| sistema   | `aceleracionWindows` | `encendida` \| `apagada`              | sí            | no          | Obligatorio                                                                                                                   |
-| sistema   | `versionWindows`     | texto                                 | no            | no          | Opcional                                                                                                                      |
-| enJuego   | `sensibilidad`       | número > 0                            | sí            | **sí**      | Obligatorio                                                                                                                   |
-| enJuego   | `rawInput`           | `encendido` \| `apagado`              | sí            | **sí**      | Obligatorio                                                                                                                   |
-| enJuego   | `parametrosInicio`   | texto                                 | no            | no          | Opcional                                                                                                                      |
-| enJuego   | `markC`              | booleano                              | no            | no          | Opcional                                                                                                                      |
-| resultado | `rango`              | texto libre                           | sí            | no          | Obligatorio. Sin orden entre rangos en v1                                                                                     |
-| resultado | `certeza`            | `medido` \| `recordado` \| `estimado` | **no**        | no          | Obligatorio                                                                                                                   |
-| resultado | `matchPerfecto`      | booleano                              | no            | no          | Opcional. Lo usa `mejor_por_juego` (F2)                                                                                       |
+| Bloque    | Campo                | Tipo del valor                        | `desconocido` | `no_aplica` | Notas                                                                                                                                |
+| --------- | -------------------- | ------------------------------------- | ------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| raíz      | `formato`            | `"ladder-lab.estampa"`                | no            | no          | Constante                                                                                                                            |
+| raíz      | `version`            | entero (`1`)                          | no            | no          | Versión del formato, no de la estampa                                                                                                |
+| raíz      | `id`                 | texto (uuid)                          | no            | no          | **Siempre presente en toda exportación**; no se acepta como entrada de `crear_estampa` (lo genera la base). Ver «Exportación»        |
+| raíz      | `derivadaDe`         | el `id` de otra estampa               | no            | no          | **Opcional.** Referencia a un `id`. Ver «derivadaDe»                                                                                 |
+| raíz      | `notas`              | texto                                 | no            | no          | Opcional                                                                                                                             |
+| juego     | `nombre`             | texto no vacío                        | **no**        | no          | Obligatorio                                                                                                                          |
+| juego     | `genero`             | `FPS` \| `RTS`                        | **no**        | no          | Obligatorio. Solo esos dos valores                                                                                                   |
+| juego     | `etapa`              | texto no vacío                        | sí            | no          | Al menos `etapa` o `fecha` presente                                                                                                  |
+| juego     | `fecha`              | `YYYY-MM-DD`                          | sí            | no          | Al menos `etapa` o `fecha` presente                                                                                                  |
+| sistema   | `mouse`              | texto: marca y modelo                 | sí            | no          | Obligatorio. Una sola casilla                                                                                                        |
+| sistema   | `dpi`                | entero > 0                            | sí            | no          | Obligatorio                                                                                                                          |
+| sistema   | `polling`            | entero > 0 (Hz)                       | sí            | no          | Obligatorio                                                                                                                          |
+| sistema   | `resolucion`         | `"ANCHOxALTO"` (p. ej. `1920x1080`)   | sí            | no          | Obligatorio                                                                                                                          |
+| sistema   | `hz`                 | entero > 0                            | sí            | no          | Frecuencia del monitor. Obligatorio                                                                                                  |
+| sistema   | `punteroWindows`     | entero 1–20                           | sí            | no          | Velocidad del puntero (valor de `MouseSensitivity`). Obligatorio. Antes `posicionWindows` 1–11: ver `DECISION_PUNTERO_WINDOWS_20.md` |
+| sistema   | `aceleracionWindows` | `encendida` \| `apagada`              | sí            | no          | Obligatorio                                                                                                                          |
+| sistema   | `versionWindows`     | texto                                 | no            | no          | Opcional                                                                                                                             |
+| enJuego   | `sensibilidad`       | número > 0                            | sí            | **sí**      | Obligatorio                                                                                                                          |
+| enJuego   | `rawInput`           | `encendido` \| `apagado`              | sí            | **sí**      | Obligatorio                                                                                                                          |
+| enJuego   | `parametrosInicio`   | texto                                 | no            | no          | Opcional                                                                                                                             |
+| enJuego   | `markC`              | booleano                              | no            | no          | Opcional                                                                                                                             |
+| resultado | `rango`              | texto libre                           | sí            | no          | Obligatorio. Sin orden entre rangos en v1                                                                                            |
+| resultado | `certeza`            | `medido` \| `recordado` \| `estimado` | **no**        | no          | Obligatorio                                                                                                                          |
+| resultado | `matchPerfecto`      | booleano                              | no            | no          | Opcional. Lo usa `mejor_por_juego` (F2)                                                                                              |
 
 ## Ejemplo
 
@@ -79,7 +79,7 @@ Alternativa descartada: envolver cada campo como `{ "estado": …, "valor": … 
     "polling": 1000,
     "resolucion": "1920x1080",
     "hz": 240,
-    "posicionWindows": 6,
+    "punteroWindows": 10,
     "aceleracionWindows": "apagada"
   },
   "enJuego": { "sensibilidad": "desconocido", "rawInput": "apagado" },
@@ -137,6 +137,10 @@ Estado: **resuelto el 2026-11-05** por la opción 3 de las tres que este ADR pla
 ## Ampliación por F3: campo `archivada` en la exportación
 
 Este ADR decía que la exportación incluye las estampas archivadas (para que ningún `derivadaDe` quede colgado), pero un documento exportado no decía si la estampa estaba archivada: al restaurar, todas volverían como visibles. Se añade el campo **`archivada: true`**, presente **solo** cuando la estampa está archivada y solo en documentos exportados (igual que `id`). Una estampa no archivada no lleva el campo. El esquema lo acepta únicamente como `true`. _(Ampliación mía, necesaria para que respaldar y restaurar sea una ida y vuelta fiel; a confirmar con Freddy.)_
+
+## Cambio posterior: `posicionWindows` pasa a `punteroWindows` (2026-11-10)
+
+Por orden de Freddy, `sistema.posicionWindows` (1–11) se renombró a `sistema.punteroWindows` (1–20) sin subir la versión del formato. La tabla y el ejemplo de arriba ya dicen el campo nuevo; el motivo y el contrato están en [`DECISION_PUNTERO_WINDOWS_20.md`](./DECISION_PUNTERO_WINDOWS_20.md). El nombre viejo ya no se acepta.
 
 ## Qué queda abierto
 

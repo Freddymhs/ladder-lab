@@ -17,7 +17,7 @@
         "polling": 1000,
         "resolucion": "1920x1080",
         "hz": 240,
-        "posicionWindows": 6,
+        "punteroWindows": 10,
         "aceleracionWindows": "apagada"
       },
       "enJuego": { "sensibilidad": 1.8, "rawInput": "encendido" },
@@ -44,7 +44,7 @@
         "polling": 1000,
         "resolucion": "2560x1440",
         "hz": 144,
-        "posicionWindows": 6,
+        "punteroWindows": 10,
         "aceleracionWindows": "apagada"
       },
       "enJuego": { "sensibilidad": "no_aplica", "rawInput": "no_aplica" },

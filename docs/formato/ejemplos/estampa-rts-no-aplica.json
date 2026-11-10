@@ -13,7 +13,7 @@
     "polling": 1000,
     "resolucion": "2560x1440",
     "hz": 144,
-    "posicionWindows": 6,
+    "punteroWindows": 10,
     "aceleracionWindows": "apagada",
     "versionWindows": "Windows 11"
   },
