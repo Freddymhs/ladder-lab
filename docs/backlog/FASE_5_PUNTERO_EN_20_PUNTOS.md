@@ -3,7 +3,7 @@
 **Destraba**: registrar la primera estampa real (la base RTS del 2026-11-10), que hoy no cabe en el formato.
 **Prioridad**: Alta
 **Dependencias**: FASE_1 y FASE_4. Va en paralelo con `sens-lab` `FASE_4_PUNTERO_EN_20_PUNTOS` (mismo contrato; la tarea 5.5 necesita esa fase hecha en disco).
-**Estado**: tareas 5.1 a 5.5 hechas el 2026-11-10 (código, pruebas, documentos y contrato real contra sens-lab); 5.6 y 5.7 (push, CI, despliegue y comprobación) en curso. Escrita por la sesión de control el 2026-11-10.
+**Estado**: HECHA el 2026-11-10 (7/7): código, pruebas, documentos y contrato real contra sens-lab. Sellada y pusheada en `fc972a1`; CI de ese commit en verde; desplegada y comprobada en el Mac Mini sin crear estampas. Escrita por la sesión de control el 2026-11-10.
 **Origen**: orden de Freddy del 2026-11-10: «debemos ajustarlo para que sea posible y funcione así de ahora en adelante en 20 puntos». Renombrar el campo fue recomendación de control; Freddy respondió «dale».
 
 > Por qué: Windows 11 guarda la velocidad del puntero como un entero de 1 a 20 (`HKCU\Control Panel\Mouse\MouseSensitivity`, el valor de `SPI_GETMOUSESPEED`). El formato v1 la pide como «posición» de 1 a 11, la escala del panel viejo. La base de Freddy está en **9 de 20**, que no existe en la escala de 11: hoy esa estampa solo podría decir `desconocido`.
@@ -92,8 +92,8 @@ Equivalencia para llevar a mano un dato recordado en la escala vieja (posición 
 - [x] Un documento con `posicionWindows` se rechaza con un error que nombra el campo.
 - [x] La especificación, los cuatro fixtures y los dos ADR dicen lo mismo que el esquema (`formato-publicado.spec.ts` en verde).
 - [x] `scripts/verificar-con-sens-lab.sh` sale 0 contra el sens-lab ya cambiado.
-- [ ] Sellado y pusheado; CI del commit en verde.
-- [ ] Desplegado y comprobado en el Mac Mini sin haber creado estampas.
+- [x] Sellado y pusheado; CI del commit en verde.
+- [x] Desplegado y comprobado en el Mac Mini sin haber creado estampas.
 
 ## Resultados de la ejecución (2026-11-10)
 
@@ -105,3 +105,6 @@ Equivalencia para llevar a mano un dato recordado en la escala vieja (posición 
 - **5.4** Pruebas del puntero 9 (válido), extremos 1 y 20, rojos 0, 21 y 2,5, y el campo viejo. **Prueba añadida que no pedía la fase:** `formato-publicado.spec.ts` comparaba nombres y banderas pero no el rango, así que una tabla que dijera «1 a 11» seguía en verde; ahora una prueba compara el rango de la tabla con las constantes del esquema.
 - **Rojos provocados:** (1) máximo en 11 → cae la prueba de extremos; (2) tabla de la especificación en «1 a 11» → cae la prueba nueva de rango; (3) ejemplos con `posicionWindows` → el contrato con sens-lab sale 1. Los tres revertidos.
 - **5.5** El contrato real sale 0; sens-lab lee `punteroWindows` y los faltantes del mapeo no incluyen el puntero.
+- **5.6** Sellada con `/work:sellar:run` (2 vueltas: la primera escribió 2 restos de la escala vieja, `DECISION_FORMATO_ESTAMPA_V1.md:35` y `docs/flows.md:108`; la segunda limpia). Commit `fc972a1`, sin firma de IA; CI run 42840650152 en verde. Con sens-lab ya pusheado (`6e2de83`, CI verde), `deploy/desplegar.sh` salió 0: imágenes `ladder-lab:fc972a1` y `sens-lab:6e2de83`, contenedores recreados; `ladder-lab` quedó `healthy`.
+- **5.7** Contra el servidor desplegado, sin crear ni corregir estampas: `/healthz` 200; `POST /mcp` sin cabecera 401 y con token basura 401; `tools/list` devuelve 11 herramientas y `crear_estampa` declara `sistema.punteroWindows` entero de 1 a 20 (o `desconocido`), sin rastro de `posicionWindows`; los logs de `ladder-lab` no contienen token. sens-lab responde 200 en su puerto. Los controles de borrado/inmutabilidad del runbook no se corrieron: exigen filas reales y la base es real.
+- **Pendiente de control:** cargar la primera estampa real (base RTS, puntero 9).
