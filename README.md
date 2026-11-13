@@ -113,7 +113,7 @@ La imagen corre como usuario no root, solo con dependencias de producción, y tr
 
 ```bash
 claude mcp add --transport http --scope user ladder-lab \
-  https://mac-mini-server.tail1798c7.ts.net:8444/mcp \
+  https://mac-mini-server.tail1798c7.ts.net:8446/mcp \
   --header "Authorization: Bearer <TOKEN>"
 ```
 

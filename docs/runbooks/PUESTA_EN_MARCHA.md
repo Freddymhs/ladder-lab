@@ -4,7 +4,7 @@
 
 | qué       | dónde                                                                                           |
 | --------- | ----------------------------------------------------------------------------------------------- |
-| MCP       | `https://mac-mini-server.tail1798c7.ts.net:8444/mcp`                                            |
+| MCP       | `https://mac-mini-server.tail1798c7.ts.net:8446/mcp`                                            |
 | sens-lab  | `https://mac-mini-server.tail1798c7.ts.net:8445`                                                |
 | Pila      | `~/apps/lab-stack` en el Mac, proyecto Compose `lab`; puertos solo en `127.0.0.1` (3011 y 3012) |
 | Secretos  | `~/.config/lab/` en ThinkPad y Mac, carpeta 700 y archivos 600. Nunca en el repo                |
@@ -36,7 +36,7 @@ El equipo debe estar en la tailnet. El token está en `~/.config/lab/secretos.js
 
 ```bash
 claude mcp add --transport http --scope user ladder-lab \
-  https://mac-mini-server.tail1798c7.ts.net:8444/mcp \
+  https://mac-mini-server.tail1798c7.ts.net:8446/mcp \
   --header "Authorization: Bearer <TOKEN>"
 ```
 
@@ -89,7 +89,7 @@ Si hay que partir de una base o un Mac nuevos:
 7. Publicar por la tailnet en el Mac:
 
    ```bash
-   tailscale serve --bg --https=8444 http://127.0.0.1:3011
+   tailscale serve --bg --https=8446 http://127.0.0.1:3011
    tailscale serve --bg --https=8445 http://127.0.0.1:3012
    ```
 
