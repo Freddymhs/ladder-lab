@@ -9,15 +9,15 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 
 ## Fases
 
-| Fase                                         | Nombre                                                      | Estado                                                                   | Tareas | Fuente                                      |
-| -------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ | ------ | ------------------------------------------- |
-| [FASE_0](./FASE_0_BASE.md)                   | Base (huecos de la plantilla)                               | **cerrada**                                                              | 8      | plantilla `template-mcp` vs concepto, Stack |
-| [FASE_1](./FASE_1_REGISTRAR_Y_NO_PERDER.md)  | Registrar y no perder (**PROTEGIDA**)                       | desplegada; falta uso real                                               | 12     | concepto F1                                 |
-| [FASE_3](./FASE_3_CUIDAR_DATOS.md)           | Cuidar los datos (**va antes que F2**)                      | en marcha: respaldo programado, copia fuera y restauración ok            | 4      | concepto F3                                 |
-| [FASE_2](./FASE_2_CONCLUSIONES.md)           | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales                        | 6      | concepto F2                                 |
-| [FASE_4](./FASE_4_CONVERTIDOR.md)            | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real           | 3      | concepto F4                                 |
-| [FASE_5](./FASE_5_PUNTERO_EN_20_PUNTOS.md)   | Velocidad del puntero en 20 puntos                          | hecha y desplegada (2026-11-10); falta cargar la primera estampa real    | 7      | orden de Freddy del 2026-11-10              |
-| [FASE_6](./FASE_6_CONFIGURACION_COMPLETA.md) | Configuración del sistema y del juego en la estampa         | hecha en local (6/7); falta sellar, push y desplegar por orden de Freddy | 7      | pedido de Freddy del 2026-11-14             |
+| Fase                                         | Nombre                                                      | Estado                                                                | Tareas | Fuente                                      |
+| -------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- | ------ | ------------------------------------------- |
+| [FASE_0](./FASE_0_BASE.md)                   | Base (huecos de la plantilla)                               | **cerrada**                                                           | 8      | plantilla `template-mcp` vs concepto, Stack |
+| [FASE_1](./FASE_1_REGISTRAR_Y_NO_PERDER.md)  | Registrar y no perder (**PROTEGIDA**)                       | desplegada; falta uso real                                            | 12     | concepto F1                                 |
+| [FASE_3](./FASE_3_CUIDAR_DATOS.md)           | Cuidar los datos (**va antes que F2**)                      | en marcha: respaldo programado, copia fuera y restauración ok         | 4      | concepto F3                                 |
+| [FASE_2](./FASE_2_CONCLUSIONES.md)           | Conclusiones (**BLOQUEADA**: 10 estampas reales y F3 hecha) | implementada y probada en local, sin datos reales                     | 6      | concepto F2                                 |
+| [FASE_4](./FASE_4_CONVERTIDOR.md)            | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real        | 3      | concepto F4                                 |
+| [FASE_5](./FASE_5_PUNTERO_EN_20_PUNTOS.md)   | Velocidad del puntero en 20 puntos                          | hecha y desplegada (2026-11-10); falta cargar la primera estampa real | 7      | orden de Freddy del 2026-11-10              |
+| [FASE_6](./FASE_6_CONFIGURACION_COMPLETA.md) | Configuración del sistema y del juego en la estampa         | hecha y desplegada (2026-11-14); falta cargar la primera estampa real | 7      | pedido de Freddy del 2026-11-14             |
 
 Total: **47 tareas** en 7 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
 

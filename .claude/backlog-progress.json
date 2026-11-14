@@ -63,18 +63,17 @@
       "pending_owner": ["cargar la primera estampa real (base RTS, puntero 9)"]
     },
     "FASE_6": {
-      "status": "done_local_not_deployed",
-      "tasks": 6,
+      "status": "done_deployed",
+      "tasks": 7,
       "total": 7,
       "name": "Configuración del sistema y del juego en la estampa",
       "pending_owner": [
-        "6.7 sellar, push y desplegar (orden de Freddy)",
-        "confirmar valores de uac, dpiOverride y modoPantalla"
+        "cargar la primera estampa real y confirmar los valores de uac, dpiOverride y modoPantalla"
       ]
     }
   },
   "totals": {
-    "tasks_done": 37,
+    "tasks_done": 38,
     "tasks_total": 40
   },
   "meta": {

@@ -3,7 +3,7 @@
 **Destraba**: guardar la configuración del PC de juegos que a Freddy le gusta (la base RTS) y poder repetirla en otro equipo (por ejemplo, un torneo) pidiéndoselo a Claude Code.
 **Prioridad**: Alta
 **Dependencias**: FASE_1, FASE_4 y FASE_5. No cambia la base de datos (el documento es `jsonb`).
-**Estado**: HECHA EN LOCAL el 2026-11-14 (6/7). Falta la tarea 6.7 (sellar, push, CI y despliegue), que espera la orden de Freddy. Nada commiteado.
+**Estado**: HECHA el 2026-11-14 (7/7). Sellada y pusheada en `fc92137`; CI de ese commit en verde; desplegada y comprobada en el Mac Mini sin crear estampas. Pendiente de Freddy: cargar la primera estampa real y confirmar los valores de `uac`, `dpiOverride` y `modoPantalla`.
 **Origen**: Freddy, 2026-11-14: «lo que necesito es que yo utilizo Claude Code […] llamo al MCP y le digo: utiliza este MCP para registrar la configuración de mi Windows y de este juego […] y si algún día le digo "configura mi computador con la configuración de este computador", me dice: ya vamos a aplicarlo todo». Validó el esquema final con «sí, creo que está bien».
 
 > Diseño, lo que se dejó fuera y los límites: [`DECISION_CONFIGURACION_COMPLETA.md`](../decisions/DECISION_CONFIGURACION_COMPLETA.md).
@@ -45,7 +45,7 @@
 
 `scripts/verificar-con-sens-lab.sh` sale 0 (13 comprobaciones; sens-lab importa `estampa-completa.json`). Control rojo: con `"version": 2` en el fixture sale 1.
 
-### Tarea 6.7: Sellar, push, CI y despliegue — PENDIENTE (orden de Freddy)
+### Tarea 6.7: Sellar, push, CI y despliegue — HECHA
 
 `/work:sellar:run`, commit y push solo cuando Freddy lo ordene (sin firma de IA); CI en verde; `deploy/desplegar.sh` solo con orden explícita (el push no despliega). Comprobar en el servidor, **sin crear estampas**, que `crear_estampa` declara los campos nuevos. La primera estampa real la carga Freddy desde el PC de juegos.
 
@@ -64,8 +64,10 @@
 - [x] La especificación, el fixture y el esquema dicen lo mismo (`formato-publicado.spec.ts` en verde).
 - [x] `crear_estampa`, `corregir_estampa`, `exportar` e `importar_json` funcionan con los campos nuevos; repositorio en memoria y PostgREST real pasan el mismo contrato.
 - [x] `scripts/verificar-con-sens-lab.sh` sale 0.
-- [ ] Sellado, pusheado y desplegado por orden de Freddy; comprobado sin crear estampas.
+- [x] Sellado, pusheado y desplegado por orden de Freddy; comprobado sin crear estampas.
 
 ## Resultados de la ejecución (2026-11-14)
 
 `pnpm lint`, `pnpm type-check`, `pnpm build` y `pnpm test` en verde (22 archivos, **571 pruebas**, antes 440); integración contra contenedores desechables 87/87 (antes 86). Contrato con sens-lab: exit 0. **Rojos provocados:** (1) `TECLADO_RETARDO_MAX` en 4 → cae «tecladoRetardo rechaza 4»; (2) el tope contando letras en vez de bytes → cae la prueba de la «é»; (3) la tabla diciendo que `nightLight.estado` no es obligatorio → cae la prueba de obligatorio; (4) fixture con `"version": 2` → el contrato sale 1. Los cuatro revertidos. Nota: `sens-lab` tiene cambios sin commitear de otra sesión (`src/domain/juegos/catalogo.ts`); el contrato se verificó con ese árbol de trabajo.
+
+**6.7** Sellada con `/work:sellar:run` (vuelta 1 escribió 3 docs; vuelta 2 limpia, hecha con las mismas comprobaciones sin reinvocar el precommit). Commit `fc92137`, sin firma de IA; CI en verde. Se desplegó **solo ladder-lab** con `deploy/desplegar.sh ladder-lab`: el script se niega a correr si un repo tiene cambios sin commitear, y `sens-lab` tiene dos archivos de otra sesión (`src/domain/juegos/`); su HEAD (`6e2de83`) no cambió y ya estaba desplegado. Contra el servidor real (`:8446`), sin crear estampas: `/healthz` 200; `POST /mcp` sin token 401 y con token basura 401; `tools/list` devuelve 11 herramientas y `crear_estampa` declara `pantalla`, `nightLight`, `entrada`, `general`, `topeFps`, `ejecutable`, `archivosConfig` y `punteroWindows`, con el aviso de no guardar credenciales; los logs no contienen token. Los controles de borrado e inmutabilidad del runbook no se corrieron: exigen filas reales y la base es real.
