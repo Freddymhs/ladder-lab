@@ -116,7 +116,8 @@ describe.skipIf(!urlAdmin)(`SQL real (${VARIABLE_BASE_DE_PRUEBAS})`, () => {
       ],
       ['DELETE de una versión', `delete from estampa_versiones`],
       ['DELETE de una estampa', `delete from estampas`],
-      ['TRUNCATE de versiones', `truncate estampa_versiones`],
+      // Con cascade: sin él lo frena antes la clave foránea de estampas_activas.
+      ['TRUNCATE de versiones', `truncate estampa_versiones cascade`],
       ['TRUNCATE de estampas', `truncate estampas cascade`],
     ])('%s es rechazado con LL010', (_nombre, consulta) => {
       crear();

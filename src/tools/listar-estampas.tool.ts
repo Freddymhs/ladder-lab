@@ -6,11 +6,8 @@ import {
   LISTADO_LIMITE_MAXIMO,
   LISTADO_LIMITE_POR_DEFECTO,
 } from '@domain/estampa/index.js';
-import {
-  ANOTACIONES_LECTURA,
-  protegido,
-  resumirEstampa,
-} from './tool-support.js';
+import { leerIndiceDeActivas, resumirParaElegir } from './activa.js';
+import { ANOTACIONES_LECTURA, protegido } from './tool-support.js';
 import type { ToolDeps } from './tool-support.js';
 
 export function registerListarEstampasTool(
@@ -22,9 +19,16 @@ export function registerListarEstampasTool(
     {
       title: 'Listar estampas',
       description:
-        'Lista un resumen de las estampas vigentes, de la más reciente a la más antigua por fecha. Se puede filtrar por juego (sin distinguir mayúsculas) y por género. Las archivadas no salen salvo con incluirArchivadas. Usa ver_estampa para el detalle.',
+        'Lista un resumen de las estampas vigentes, de la más reciente a la más antigua por fecha. Se puede filtrar por juego (sin distinguir mayúsculas ni espacios en los extremos) y por género. ' +
+        'Cada una trae juego, género, etapa, versión, fecha (la del juego o, sin ella, la del registro), rango, certeza, si es la activa de su juego y una etiqueta lista para mostrar en un selector. ' +
+        'Las archivadas no salen salvo con incluirArchivadas. Usa ver_estampa para el detalle.',
       inputSchema: {
-        juego: z.string().min(1).optional().describe('Nombre exacto del juego'),
+        juego: z
+          .string()
+          .trim()
+          .min(1)
+          .optional()
+          .describe('Nombre del juego (sin distinguir mayúsculas)'),
         genero: z.enum(GENEROS).optional(),
         incluirArchivadas: z.boolean().default(false),
         limite: z
@@ -47,12 +51,15 @@ export function registerListarEstampasTool(
           limite: limite + 1,
           desplazamiento,
         });
+        const indice = await leerIndiceDeActivas(deps.repository);
         return toolJson({
           devueltas: Math.min(encontradas.length, limite),
           limite,
           desplazamiento,
           hayMas: encontradas.length > limite,
-          estampas: encontradas.slice(0, limite).map(resumirEstampa),
+          estampas: encontradas
+            .slice(0, limite)
+            .map((e) => resumirParaElegir(e, indice)),
         });
       }),
   );

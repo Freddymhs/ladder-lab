@@ -34,7 +34,19 @@ Triggers que rechazan con el código `LL010`: `UPDATE`/`DELETE`/`TRUNCATE` sobre
 
 `supabase-js` no abre transacciones de varias sentencias. `crear_estampa` y `corregir_estampa` son funciones SQL: crear inserta la identidad y la versión 1 juntas, y corregir bloquea la estampa, comprueba que la **versión base** siga siendo la vigente (`LL002` si no) e inserta la siguiente. Así nunca queda una estampa sin versión ni dos versiones con el mismo número, y dos correcciones simultáneas no se pisan.
 
-Códigos propios: `LL001` no existe, `LL002` conflicto de versión, `LL003` `derivadaDe` inválido, `LL010` modificación prohibida.
+Códigos propios: `LL001` no existe, `LL002` conflicto de versión, `LL003` `derivadaDe` inválido, `LL004` importación inválida, `LL005` estampa archivada (no se marca activa), `LL006` versión inexistente, `LL007` juego distinto del de la versión, `LL010` modificación prohibida.
+
+## Estampa activa (2026-11-14)
+
+Freddy marca **una** estampa por juego como la que usa hoy; `/gameconfig:run-rts` la lee como fuente de verdad. Migración `20261114120000_estampa_activa.sql`.
+
+- **Vive aparte** porque las versiones son inmutables: `estampas_activas (juego, estampa_id, numero_version, elegida_en)`, con clave foránea a `estampa_versiones`. Queda **fijada a una versión**: corregir la estampa no mueve la activa; sin versión al marcar, se guarda explícita la última de ese momento.
+- **Un juego sin distinguir mayúsculas**: índice único sobre `lower(juego)`, igual que el filtro por juego de `listar_estampas`. Marcar otra del mismo juego reemplaza la fila (`marcar_estampa_activa`, atómica, devuelve la anterior).
+- **Garantía en la base**, no solo en la RPC: un trigger exige que la versión exista (`LL006`), que su estampa no esté archivada (`LL005`) y que `juego` sea el de esa versión (`LL007`).
+- **Archivar la activa deja el juego sin activa** sin borrar nada: la fila queda y la vista `estampas_activas_detalle` no la muestra. `service_role` tiene `SELECT`, `INSERT` y `UPDATE` sobre la tabla, sin `DELETE` ni `TRUNCATE`.
+- **Activa no es match perfecto**: match perfecto es una marca de calidad del resultado dentro del documento (puede haber muchas); la activa es una elección de uso (una por juego) y nunca se deduce de la versión ni del match.
+- `juegos_registrados` (nombres en uso) permite sugerir «StarCraft II» cuando se pide «Starcraft 2».
+- **Pendiente:** el respaldo JSON (`exportar`, `pnpm respaldo`) no lleva la elección de activas; `pg_dump` sí. La estampa no tiene campo «nombre»: los listados usan `juego.etapa` como rótulo.
 
 ## Seguridad
 

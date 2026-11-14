@@ -4,15 +4,19 @@ import {
   AlmacenamientoError,
   ConflictoDeVersionError,
   DerivadaInvalidaError,
+  EstampaArchivadaError,
   EstampaNoEncontradaError,
   FORMATO_VERSION,
   ImportacionInvalidaError,
+  VersionNoEncontradaError,
   datosEstampaSchema,
 } from '@domain/estampa/index.js';
 import type {
   DatosEstampa,
+  EstampaActiva,
   EstampaGuardada,
   PlanImportacion,
+  ResultadoMarcarActiva,
 } from '@domain/estampa/index.js';
 import type {
   EstampaRepository,
@@ -28,6 +32,8 @@ export const CODIGO_SQL = {
   CONFLICTO_DE_VERSION: 'LL002',
   DERIVADA_INVALIDA: 'LL003',
   IMPORTACION_INVALIDA: 'LL004',
+  ESTAMPA_ARCHIVADA: 'LL005',
+  VERSION_NO_EXISTE: 'LL006',
   UUID_INVALIDO: '22P02',
 } as const;
 
@@ -35,8 +41,11 @@ export const CODIGO_SQL = {
 const ID_NO_INFORMADO = '(sin id)';
 const VISTA_VIGENTES = 'estampas_vigentes';
 const VISTA_HISTORIAL = 'estampas_historial';
+const VISTA_ACTIVAS = 'estampas_activas_detalle';
+const VISTA_JUEGOS = 'juegos_registrados';
 const COLUMNAS =
   'id,numero_version,total_versiones,archivada,creada_en,version_creada_en,datos';
+const COLUMNAS_ACTIVA = `${COLUMNAS},juego,elegida_en`;
 const PAGINA_EXPORTACION = 500;
 
 const filaSchema = z.object({
@@ -48,6 +57,23 @@ const filaSchema = z.object({
   version_creada_en: z.string(),
   datos: datosEstampaSchema,
 });
+
+const filaActivaSchema = filaSchema.extend({
+  juego: z.string(),
+  elegida_en: z.string(),
+});
+
+const referenciaVersionSchema = z.object({
+  id: z.string().uuid(),
+  numeroVersion: z.number().int().positive(),
+});
+
+const resultadoMarcarSchema = z.object({
+  juego: z.string(),
+  anterior: referenciaVersionSchema.nullable(),
+});
+
+const filaJuegoSchema = z.object({ juego: z.string() });
 
 const resultadoImportacionSchema = z.object({
   estampasNuevas: z.number().int().nonnegative(),
@@ -70,7 +96,11 @@ interface ErrorPostgrest {
 const escaparPatron = (texto: string): string =>
   texto.replace(/[\\%_]/g, '\\$&');
 
-function traducirError(error: ErrorPostgrest, id?: string): Error {
+function traducirError(
+  error: ErrorPostgrest,
+  id?: string,
+  numeroVersion?: number,
+): Error {
   switch (error.code) {
     case CODIGO_SQL.NO_EXISTE:
     case CODIGO_SQL.UUID_INVALIDO:
@@ -81,6 +111,10 @@ function traducirError(error: ErrorPostgrest, id?: string): Error {
       return new DerivadaInvalidaError(error.message);
     case CODIGO_SQL.IMPORTACION_INVALIDA:
       return new ImportacionInvalidaError(error.message);
+    case CODIGO_SQL.ESTAMPA_ARCHIVADA:
+      return new EstampaArchivadaError(id ?? ID_NO_INFORMADO);
+    case CODIGO_SQL.VERSION_NO_EXISTE:
+      return new VersionNoEncontradaError(id ?? ID_NO_INFORMADO, numeroVersion);
     default:
       return new AlmacenamientoError(
         'Fallo al acceder al almacenamiento',
@@ -97,24 +131,33 @@ const identificarFila = (fila: unknown): string => {
   return `id ${String(id)} versión ${String(version)}`;
 };
 
-function aEstampa(fila: unknown): EstampaGuardada {
-  const resultado = filaSchema.safeParse(fila);
+function validarFila<T>(esquema: z.ZodType<T>, fila: unknown): T {
+  const resultado = esquema.safeParse(fila);
   if (!resultado.success) {
     throw new AlmacenamientoError(
       `La base devolvió una estampa que no cumple el esquema (${identificarFila(fila)})`,
       resultado.error,
     );
   }
-  const f = resultado.data;
-  return {
-    id: f.id,
-    numeroVersion: f.numero_version,
-    totalVersiones: f.total_versiones,
-    archivada: f.archivada,
-    creadaEn: f.creada_en,
-    versionCreadaEn: f.version_creada_en,
-    datos: f.datos,
-  };
+  return resultado.data;
+}
+
+const filaAEstampa = (f: z.infer<typeof filaSchema>): EstampaGuardada => ({
+  id: f.id,
+  numeroVersion: f.numero_version,
+  totalVersiones: f.total_versiones,
+  archivada: f.archivada,
+  creadaEn: f.creada_en,
+  versionCreadaEn: f.version_creada_en,
+  datos: f.datos,
+});
+
+const aEstampa = (fila: unknown): EstampaGuardada =>
+  filaAEstampa(validarFila(filaSchema, fila));
+
+function aActiva(fila: unknown): EstampaActiva {
+  const f = validarFila(filaActivaSchema, fila);
+  return { juego: f.juego, elegidaEn: f.elegida_en, estampa: filaAEstampa(f) };
 }
 
 export class SupabaseEstampaRepository implements EstampaRepository {
@@ -233,6 +276,66 @@ export class SupabaseEstampaRepository implements EstampaRepository {
   async todas(opciones: OpcionesTodas): Promise<EstampaGuardada[]> {
     const vista = opciones.incluirVersiones ? VISTA_HISTORIAL : VISTA_VIGENTES;
     return this.paginar(vista, 0);
+  }
+
+  async marcarActiva(
+    id: string,
+    numeroVersion?: number,
+  ): Promise<ResultadoMarcarActiva> {
+    const { data, error } = await this.client.rpc('marcar_estampa_activa', {
+      p_id: id,
+      p_numero_version: numeroVersion ?? null,
+    });
+    if (error) throw traducirError(error, id, numeroVersion);
+    const marcada = resultadoMarcarSchema.safeParse(data);
+    if (!marcada.success) {
+      throw new AlmacenamientoError(
+        'Respuesta inesperada al marcar la activa',
+        marcada.error,
+      );
+    }
+    const activa = await this.activaDe(marcada.data.juego);
+    if (!activa) {
+      throw new AlmacenamientoError(
+        'La estampa activa no se puede leer de vuelta',
+      );
+    }
+    return { activa, anterior: marcada.data.anterior };
+  }
+
+  async activaDe(juego: string): Promise<EstampaActiva | null> {
+    const { data, error } = await this.client
+      .from(VISTA_ACTIVAS)
+      .select(COLUMNAS_ACTIVA)
+      .ilike('juego', escaparPatron(juego))
+      .maybeSingle();
+    if (error) throw traducirError(error);
+    return data ? aActiva(data) : null;
+  }
+
+  async activas(): Promise<EstampaActiva[]> {
+    const { data, error } = await this.client
+      .from(VISTA_ACTIVAS)
+      .select(COLUMNAS_ACTIVA)
+      .order('juego', { ascending: true });
+    if (error) throw traducirError(error);
+    return (data ?? []).map(aActiva);
+  }
+
+  async juegos(): Promise<string[]> {
+    const { data, error } = await this.client
+      .from(VISTA_JUEGOS)
+      .select('juego')
+      .order('juego', { ascending: true });
+    if (error) throw traducirError(error);
+    const filas = z.array(filaJuegoSchema).safeParse(data ?? []);
+    if (!filas.success) {
+      throw new AlmacenamientoError(
+        'La base devolvió nombres de juego inesperados',
+        filas.error,
+      );
+    }
+    return filas.data.map((fila) => fila.juego);
   }
 
   /** PostgREST limita las filas por respuesta: se pide por páginas hasta agotar. */

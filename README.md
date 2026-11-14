@@ -50,7 +50,7 @@ Copia `.env.example` a `.env` (nunca se sube al repo). Se valida al arrancar y e
 | `LOG_LEVEL`            | `info`        | Nivel de pino                                       |
 | `NODE_ENV`             | `development` | `development`, `production` o `test`                |
 
-## Herramientas (F1, F2 y F3)
+## Herramientas (F1, F2, F3 y estampa activa)
 
 | Herramienta           | Qué hace                                                                                                                   |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -65,6 +65,12 @@ Copia `.env.example` a `.env` (nunca se sube al repo). Se valida al arrancar y e
 | `comparar_estampas`   | Compara de 2 a 10 estampas campo por campo; "sin dato" no cuenta como diferencia; no juzga                                 |
 | `matches_perfectos`   | Estampas marcadas como match perfecto, con su configuración, rango (texto) y certeza                                       |
 | `mejor_por_juego`     | Lo mismo para un juego: "mejor" = marcada como match perfecto, sin ordenar rangos ni juzgar                                |
+| `marcar_activa`       | Marca la estampa que Freddy usa hoy en su juego (una por juego, fijada a una versión; por defecto la última)               |
+| `activa_por_juego`    | La activa de un juego, con la versión entera (Windows, `.exe`, `archivosConfig`); si no hay, lo dice y sugiere nombres     |
+
+**Activa no es match perfecto.** La activa es la configuración que Freddy usa hoy: exactamente una por juego, elegida a mano con `marcar_activa` (o con `marcarActiva: true` en `crear_estampa`/`corregir_estampa`, siempre preguntándole antes). Es lo que lee `/gameconfig:run-rts` como fuente de verdad. Match perfecto es una marca de calidad del resultado y puede haber muchas. Nada elige la activa por número de versión ni por match perfecto. Corregir la activa crea la versión N+1 pero la activa sigue en N hasta marcarla; archivarla deja el juego sin activa. `listar_estampas`, `activa_por_juego` y `mejor_por_juego` traen en cada estampa juego, género, etapa, versión, fecha, rango, certeza, `activa` y una `etiqueta` para armar un selector. Los nombres de juego no distinguen mayúsculas ni espacios en los extremos.
+
+Migraciones en `supabase/migrations/`, en orden; la de la estampa activa es `20261114120000_estampa_activa.sql` (tabla `estampas_activas`, vistas `estampas_activas_detalle` y `juegos_registrados`, función `marcar_estampa_activa`). Cómo aplicarlas: `docs/runbooks/PUESTA_EN_MARCHA.md`.
 
 Nada se borra: no existe ninguna herramienta ni permiso que borre, y la base rechaza `UPDATE`/`DELETE` de versiones (`docs/decisions/DECISION_MODELO_DATOS.md`). Formato del JSON: `docs/decisions/DECISION_FORMATO_ESTAMPA_V1.md`.
 

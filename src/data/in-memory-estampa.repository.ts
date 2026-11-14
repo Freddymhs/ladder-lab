@@ -2,14 +2,18 @@ import { randomUUID } from 'node:crypto';
 import {
   ConflictoDeVersionError,
   DerivadaInvalidaError,
+  EstampaArchivadaError,
   EstampaNoEncontradaError,
   ImportacionInvalidaError,
   PATRON_FECHA,
+  VersionNoEncontradaError,
 } from '@domain/estampa/index.js';
 import type {
   DatosEstampa,
+  EstampaActiva,
   EstampaGuardada,
   PlanImportacion,
+  ResultadoMarcarActiva,
 } from '@domain/estampa/index.js';
 import type {
   EstampaRepository,
@@ -31,6 +35,16 @@ interface EstampaAlmacenada {
   readonly versiones: VersionAlmacenada[];
   archivadaEn: string | undefined;
 }
+
+interface ActivaAlmacenada {
+  readonly juego: string;
+  readonly id: string;
+  readonly numeroVersion: number;
+  readonly elegidaEn: string;
+}
+
+/** Un juego se identifica sin distinguir mayúsculas, igual que el índice en SQL. */
+const claveDeJuego = (juego: string): string => juego.toLowerCase();
 
 const fechaOrdenable = (datos: DatosEstampa): string | undefined => {
   const { fecha } = datos.juego;
@@ -58,6 +72,7 @@ const compararPorFechaDesc = (
  */
 export class InMemoryEstampaRepository implements EstampaRepository {
   private readonly estampas = new Map<string, EstampaAlmacenada>();
+  private readonly activasPorJuego = new Map<string, ActivaAlmacenada>();
 
   constructor(private readonly ahora: () => Date = () => new Date()) {}
 
@@ -208,6 +223,76 @@ export class InMemoryEstampaRepository implements EstampaRepository {
           e.versiones.map((_, i) => this.version(e, i + 1)),
         )
       : ordenadas.map((e) => this.vigente(e));
+  }
+
+  async marcarActiva(
+    id: string,
+    numeroVersion?: number,
+  ): Promise<ResultadoMarcarActiva> {
+    const estampa = this.requerir(id);
+    if (estampa.archivadaEn !== undefined) {
+      throw new EstampaArchivadaError(id);
+    }
+    const numero = numeroVersion ?? estampa.versiones.length;
+    const version = estampa.versiones[numero - 1];
+    if (version === undefined) {
+      throw new VersionNoEncontradaError(id, numero);
+    }
+    const { nombre: juego } = version.datos.juego;
+    const clave = claveDeJuego(juego);
+    const previa = this.activaVigente(this.activasPorJuego.get(clave));
+    const nueva: ActivaAlmacenada = {
+      juego,
+      id,
+      numeroVersion: numero,
+      elegidaEn: this.ahora().toISOString(),
+    };
+    this.activasPorJuego.set(clave, nueva);
+    return {
+      activa: this.presentarActiva(nueva, estampa),
+      anterior: previa
+        ? { id: previa.estampa.id, numeroVersion: previa.estampa.numeroVersion }
+        : null,
+    };
+  }
+
+  async activaDe(juego: string): Promise<EstampaActiva | null> {
+    return this.activaVigente(this.activasPorJuego.get(claveDeJuego(juego)));
+  }
+
+  async activas(): Promise<EstampaActiva[]> {
+    return [...this.activasPorJuego.values()]
+      .map((guardada) => this.activaVigente(guardada))
+      .filter((activa) => activa !== null)
+      .sort((a, b) => a.juego.localeCompare(b.juego));
+  }
+
+  async juegos(): Promise<string[]> {
+    const nombres = this.todasLasVigentes()
+      .filter((e) => !e.archivada)
+      .map((e) => e.datos.juego.nombre);
+    return [...new Set(nombres)].sort();
+  }
+
+  /** Una activa cuya estampa se archivó ya no cuenta: el juego queda sin activa. */
+  private activaVigente(
+    guardada: ActivaAlmacenada | undefined,
+  ): EstampaActiva | null {
+    if (guardada === undefined) return null;
+    const estampa = this.requerir(guardada.id);
+    if (estampa.archivadaEn !== undefined) return null;
+    return this.presentarActiva(guardada, estampa);
+  }
+
+  private presentarActiva(
+    guardada: ActivaAlmacenada,
+    estampa: EstampaAlmacenada,
+  ): EstampaActiva {
+    return {
+      juego: guardada.juego,
+      elegidaEn: guardada.elegidaEn,
+      estampa: this.version(estampa, guardada.numeroVersion),
+    };
   }
 
   private todasLasVigentes(): EstampaGuardada[] {

@@ -5,7 +5,9 @@ import {
   AlmacenamientoError,
   ConflictoDeVersionError,
   DerivadaInvalidaError,
+  EstampaArchivadaError,
   EstampaNoEncontradaError,
+  VersionNoEncontradaError,
 } from '@domain/estampa/index.js';
 import { datosValidos } from '../../tools/__tests__/harness.js';
 import {
@@ -246,5 +248,86 @@ describe('SupabaseEstampaRepository — escritura', () => {
     await expect(repositorio.crear(datosValidos())).rejects.toBeInstanceOf(
       AlmacenamientoError,
     );
+  });
+});
+
+describe('SupabaseEstampaRepository — estampa activa', () => {
+  const filaActiva = (id: string = randomUUID()) => ({
+    ...filaValida(id),
+    juego: 'StarCraft II',
+    elegida_en: '2026-11-14T00:00:00Z',
+  });
+
+  it('marcarActiva: sin versión envía null a la RPC y relee la activa por su juego', async () => {
+    const id = randomUUID();
+    const { repositorio, llamadas } = clienteFalso({
+      rpc: {
+        data: { juego: 'StarCraft II', id, numeroVersion: 1, anterior: null },
+        error: null,
+      },
+      consulta: { data: filaActiva(id), error: null },
+    });
+
+    const { activa, anterior } = await repositorio.marcarActiva(id);
+
+    expect(llamadas[0]).toEqual([
+      'rpc',
+      ['marcar_estampa_activa', { p_id: id, p_numero_version: null }],
+    ]);
+    expect(llamadas).toContainEqual(['from', ['estampas_activas_detalle']]);
+    expect(llamadas).toContainEqual(['ilike', ['juego', 'StarCraft II']]);
+    expect(activa).toMatchObject({
+      juego: 'StarCraft II',
+      elegidaEn: '2026-11-14T00:00:00Z',
+    });
+    expect(activa.estampa.id).toBe(id);
+    expect(anterior).toBeNull();
+  });
+
+  it.each([
+    [CODIGO_SQL.ESTAMPA_ARCHIVADA, EstampaArchivadaError],
+    [CODIGO_SQL.VERSION_NO_EXISTE, VersionNoEncontradaError],
+    [CODIGO_SQL.NO_EXISTE, EstampaNoEncontradaError],
+  ])(
+    'marcarActiva: el código SQL %s se vuelve el error de dominio correspondiente',
+    async (code, esperado) => {
+      const { repositorio } = clienteFalso({
+        rpc: { data: null, error: { code, message: 'x' } },
+      });
+
+      await expect(
+        repositorio.marcarActiva(randomUUID(), 3),
+      ).rejects.toBeInstanceOf(esperado);
+    },
+  );
+
+  it('activaDe: escapa el patrón del juego y devuelve null si no hay fila', async () => {
+    const { repositorio, llamadas } = clienteFalso({
+      consulta: { data: null, error: null },
+    });
+
+    expect(await repositorio.activaDe('a%b')).toBeNull();
+    expect(llamadas).toContainEqual(['ilike', ['juego', 'a\\%b']]);
+  });
+
+  it('juegos: lee la vista de nombres de juego', async () => {
+    const { repositorio, llamadas } = clienteFalso({
+      consulta: { data: [{ juego: 'StarCraft II' }], error: null },
+    });
+
+    expect(await repositorio.juegos()).toEqual(['StarCraft II']);
+    expect(llamadas[0]).toEqual(['from', ['juegos_registrados']]);
+  });
+
+  it('activas: lee la vista ordenada por juego', async () => {
+    const { repositorio, llamadas } = clienteFalso({
+      consulta: { data: [filaActiva()], error: null },
+    });
+
+    const activas = await repositorio.activas();
+
+    expect(activas).toHaveLength(1);
+    expect(llamadas[0]).toEqual(['from', ['estampas_activas_detalle']]);
+    expect(llamadas).toContainEqual(['order', ['juego', { ascending: true }]]);
   });
 });

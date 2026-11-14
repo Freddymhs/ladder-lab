@@ -7,3 +7,4 @@ export * from './export.js';
 export * from './validar.js';
 export * from './import.js';
 export * from './diff.js';
+export * from './juegos.js';

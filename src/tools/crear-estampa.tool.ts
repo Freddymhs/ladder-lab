@@ -1,12 +1,29 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
 import { toolJson } from '@common/errors.js';
 import { datosBaseSchema, parsearDatos } from '@domain/estampa/index.js';
+import { mensajeDeMarcado, presentarMarcado } from './activa.js';
+import {
+  DIFERENCIA_ACTIVA_Y_MATCH,
+  PREGUNTAR_ANTES_DE_MARCAR,
+  SIGUIENTE_MARCADA,
+  SIGUIENTE_SIN_MARCAR,
+} from './constants.js';
 import {
   ANOTACIONES_ESCRITURA,
   presentarEstampa,
   protegido,
 } from './tool-support.js';
 import type { ToolDeps } from './tool-support.js';
+
+const entradaCrearSchema = datosBaseSchema.extend({
+  marcarActiva: z
+    .boolean()
+    .optional()
+    .describe(
+      'true: además la deja como la activa de su juego. Solo con el sí de Freddy',
+    ),
+});
 
 export function registerCrearEstampaTool(
   server: McpServer,
@@ -25,16 +42,27 @@ export function registerCrearEstampaTool(
         'sistema.entrada (teclado), sistema.general (UAC, Game Mode, Game DVR, plan de energía, suspensión USB, exclusiones del antivirus) y, en enJuego, ' +
         'modoPantalla, topeFps, vsync, resolucionJuego, ejecutable (ruta y opciones de compatibilidad) y archivosConfig (el texto entero de los archivos de configuración del juego). ' +
         'Lee del equipo lo que puedas y pregunta al usuario lo que no; anota "desconocido" lo que no se sepa. ' +
-        'No guardes contraseñas, tokens ni datos de cuenta: revisa el contenido de los archivos antes de enviarlos.',
-      inputSchema: datosBaseSchema,
+        'No guardes contraseñas, tokens ni datos de cuenta: revisa el contenido de los archivos antes de enviarlos. ' +
+        `marcarActiva=true la deja además como la estampa activa de su juego (reemplaza a la de hoy). ${PREGUNTAR_ANTES_DE_MARCAR} ${DIFERENCIA_ACTIVA_Y_MATCH}`,
+      inputSchema: entradaCrearSchema,
       annotations: ANOTACIONES_ESCRITURA,
     },
-    (args) =>
+    ({ marcarActiva, ...datos }) =>
       protegido(deps.logger, async () => {
-        const creada = await deps.repository.crear(parsearDatos(args));
+        const creada = await deps.repository.crear(parsearDatos(datos));
+        if (!marcarActiva) {
+          return toolJson({
+            mensaje: 'Estampa creada.',
+            ...presentarEstampa(creada),
+            siguiente: SIGUIENTE_SIN_MARCAR,
+          });
+        }
+        const marcado = await deps.repository.marcarActiva(creada.id);
         return toolJson({
-          mensaje: 'Estampa creada.',
+          mensaje: `Estampa creada. ${mensajeDeMarcado(marcado)}`,
           ...presentarEstampa(creada),
+          activa: presentarMarcado(marcado),
+          siguiente: SIGUIENTE_MARCADA,
         });
       }),
   );

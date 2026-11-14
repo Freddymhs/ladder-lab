@@ -35,6 +35,24 @@ export class SinCambiosError extends DomainError {
 
 export class ImportacionInvalidaError extends DomainError {}
 
+export class EstampaArchivadaError extends DomainError {
+  constructor(id: string) {
+    super(
+      `La estampa ${id} está archivada: no se puede marcar como la activa de su juego.`,
+    );
+  }
+}
+
+export class VersionNoEncontradaError extends DomainError {
+  constructor(id: string, numeroVersion: number | undefined) {
+    super(
+      numeroVersion === undefined
+        ? `La estampa ${id} no tiene versiones.`
+        : `La estampa ${id} no tiene la versión ${numeroVersion}.`,
+    );
+  }
+}
+
 /** Fallo de infraestructura (base de datos): se registra y se responde genérico. */
 export class AlmacenamientoError extends Error {
   constructor(

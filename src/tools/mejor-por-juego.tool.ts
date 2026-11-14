@@ -2,6 +2,11 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { toolJson } from '@common/errors.js';
 import { LISTADO_LIMITE_POR_DEFECTO } from '@domain/estampa/index.js';
+import { leerIndiceDeActivas } from './activa.js';
+import {
+  DIFERENCIA_ACTIVA_Y_MATCH,
+  HERRAMIENTA_ACTIVA_POR_JUEGO,
+} from './constants.js';
 import { buscarMatchesPerfectos, presentarMatch } from './matches.js';
 import { ANOTACIONES_LECTURA, protegido } from './tool-support.js';
 import type { ToolDeps } from './tool-support.js';
@@ -21,10 +26,12 @@ export function registerMejorPorJuegoTool(
       description:
         'Devuelve, para un juego, las estampas marcadas como match perfecto: lo mejor que Freddy registró en ese juego, con su configuración. ' +
         '"Mejor" aquí significa solo "marcada como match perfecto": no hay ranking de rangos ni juicio sobre qué configuración es mejor. ' +
-        'Si ninguna está marcada, lo dice. Para todos los juegos a la vez usa matches_perfectos.',
+        'Si ninguna está marcada, lo dice. Para todos los juegos a la vez usa matches_perfectos. ' +
+        `Cada una dice si es la activa del juego. ${DIFERENCIA_ACTIVA_Y_MATCH} La que Freddy usa hoy se lee con ${HERRAMIENTA_ACTIVA_POR_JUEGO}.`,
       inputSchema: {
         juego: z
           .string()
+          .trim()
           .min(1)
           .describe('Nombre del juego (sin distinguir mayúsculas)'),
         incluirArchivadas: z.boolean().default(false),
@@ -43,12 +50,13 @@ export function registerMejorPorJuegoTool(
           },
         );
         if (estampas.length > 0) {
+          const indice = await leerIndiceDeActivas(deps.repository);
           return toolJson({
             juego,
             criterio: CRITERIO,
             encontradas: estampas.length,
             hayMas,
-            estampas: estampas.map(presentarMatch),
+            estampas: estampas.map((e) => presentarMatch(e, indice)),
           });
         }
         // Distinguir «no hay estampas del juego» de «hay, pero ninguna marcada».

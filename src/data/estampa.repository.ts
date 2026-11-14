@@ -1,8 +1,10 @@
 import type {
   DatosEstampa,
+  EstampaActiva,
   EstampaGuardada,
   Genero,
   PlanImportacion,
+  ResultadoMarcarActiva,
 } from '@domain/estampa/index.js';
 
 export interface FiltroListado {
@@ -38,7 +40,10 @@ export interface OpcionesTodas {
  * - una corrección crea una versión nueva y nunca altera las anteriores;
  * - `corregir` falla si la versión base ya no es la vigente;
  * - `derivadaDe` debe existir y no puede ser la propia estampa;
- * - nada se borra: archivar solo marca, importar nunca pisa un id existente.
+ * - nada se borra: archivar solo marca, importar nunca pisa un id existente;
+ * - una sola estampa activa por juego (sin distinguir mayúsculas), fijada a
+ *   una versión; una archivada no se marca y archivar la activa deja el juego
+ *   sin activa.
  */
 export interface EstampaRepository {
   crear(datos: DatosEstampa): Promise<EstampaGuardada>;
@@ -61,4 +66,18 @@ export interface EstampaRepository {
   ): Promise<ResultadoImportacion>;
   /** Todas las estampas (archivadas incluidas), vigente o con todas sus versiones. */
   todas(opciones: OpcionesTodas): Promise<EstampaGuardada[]>;
+  /**
+   * Marca la estampa como la activa del juego de esa versión y reemplaza a la
+   * anterior. Sin `numeroVersion` fija la última versión que tenga ahora.
+   */
+  marcarActiva(
+    id: string,
+    numeroVersion?: number,
+  ): Promise<ResultadoMarcarActiva>;
+  /** La activa de un juego (sin distinguir mayúsculas), o `null` si no hay. */
+  activaDe(juego: string): Promise<EstampaActiva | null>;
+  /** Las activas de todos los juegos, ordenadas por juego. */
+  activas(): Promise<EstampaActiva[]>;
+  /** Nombres de juego de las estampas vigentes no archivadas, cada uno una vez. */
+  juegos(): Promise<string[]>;
 }

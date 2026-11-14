@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { toolJson } from '@common/errors.js';
 import { EstampaNoEncontradaError } from '@domain/estampa/index.js';
+import { HERRAMIENTA_MARCAR_ACTIVA } from './constants.js';
 import {
   ANOTACIONES_ESCRITURA,
   presentarEstampa,
@@ -20,7 +21,7 @@ export function registerArchivarEstampaTool(
       description:
         'Archiva una estampa: deja de salir en listar_estampas (salvo con incluirArchivadas) pero NO se borra nada: ' +
         'conserva todas sus versiones y sigue en exportar. Es la forma de "quitar" una estampa que ya no interesa. ' +
-        'Es idempotente. En esta versión no hay herramienta para desarchivar.',
+        'Es idempotente. En esta versión no hay herramienta para desarchivar. Si era la estampa activa de su juego, el juego queda sin activa.',
       inputSchema: { id: z.string().uuid().describe('Id de la estampa') },
       annotations: { ...ANOTACIONES_ESCRITURA, idempotentHint: true },
     },
@@ -36,9 +37,18 @@ export function registerArchivarEstampaTool(
             ...presentarEstampa(actual),
           });
         }
+        const eraActiva = (await deps.repository.activas()).find(
+          (a) => a.estampa.id === id,
+        );
         const archivada = await deps.repository.archivar(id);
+        const mensaje = `Archivada. No se borró nada: sus ${archivada.totalVersiones} versión(es) se conservan.`;
+        if (eraActiva === undefined) {
+          return toolJson({ mensaje, ...presentarEstampa(archivada) });
+        }
+        const { juego } = eraActiva;
         return toolJson({
-          mensaje: `Archivada. No se borró nada: sus ${archivada.totalVersiones} versión(es) se conservan.`,
+          mensaje: `${mensaje} Era la estampa activa: "${juego}" queda sin estampa activa hasta que marques otra con ${HERRAMIENTA_MARCAR_ACTIVA}.`,
+          juegoSinActiva: juego,
           ...presentarEstampa(archivada),
         });
       }),

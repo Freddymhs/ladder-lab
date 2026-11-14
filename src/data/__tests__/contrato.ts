@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import {
   ConflictoDeVersionError,
   DerivadaInvalidaError,
+  EstampaArchivadaError,
   EstampaNoEncontradaError,
   ImportacionInvalidaError,
+  VersionNoEncontradaError,
 } from '@domain/estampa/index.js';
 import type { DatosEstampa, EstampaImportable } from '@domain/estampa/index.js';
 import {
@@ -587,6 +589,164 @@ export function describirContratoDeRepositorio(
         expect(
           (await repo.versionesDe(id))?.map((v) => v.numeroVersion),
         ).toEqual([1, 2]);
+      });
+    });
+
+    describe('estampa activa', () => {
+      const activaDelJuego = async (repo: EstampaRepository, juego: string) =>
+        (await repo.activas()).filter(
+          (a) => a.juego.toLowerCase() === juego.toLowerCase(),
+        );
+
+      it('sin numeroVersion marca la última versión y activaDe la devuelve entera, sin distinguir mayúsculas', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const datos = conJuego(datosCompletos(), juego);
+        const { id } = await repo.crear(datos);
+        const v2 = { ...datos, notas: 'v2' };
+        await repo.corregir(id, 1, v2);
+
+        const { activa, anterior } = await repo.marcarActiva(id);
+        const leida = await repo.activaDe(juego.toUpperCase());
+
+        expect(anterior).toBeNull();
+        expect(activa.juego).toBe(juego);
+        expect(activa.estampa.id).toBe(id);
+        expect(activa.estampa.numeroVersion).toBe(2);
+        expect(leida).toEqual(activa);
+        expect(leida?.estampa.datos).toEqual(v2);
+      });
+
+      it('con numeroVersion fija esa versión, aunque después se corrija la estampa', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const datos = conJuego(datosValidos(), juego);
+        const { id } = await repo.crear(datos);
+        await repo.corregir(id, 1, { ...datos, notas: 'v2' });
+
+        await repo.marcarActiva(id, 1);
+        await repo.corregir(id, 2, { ...datos, notas: 'v3' });
+        const leida = await repo.activaDe(juego);
+
+        expect(leida?.estampa.numeroVersion).toBe(1);
+        expect(leida?.estampa.totalVersiones).toBe(3);
+        expect(leida?.estampa.datos).toEqual(datos);
+      });
+
+      it('marcar otra del mismo juego reemplaza la anterior y la informa', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const primera = await repo.crear(conJuego(datosValidos(), juego));
+        const segunda = await repo.crear(
+          conJuego(datosValidos(), juego.toUpperCase()),
+        );
+        await repo.marcarActiva(primera.id);
+
+        const { anterior } = await repo.marcarActiva(segunda.id);
+
+        expect(anterior).toEqual({ id: primera.id, numeroVersion: 1 });
+        expect((await repo.activaDe(juego))?.estampa.id).toBe(segunda.id);
+        expect(await activaDelJuego(repo, juego)).toHaveLength(1);
+      });
+
+      it('volver a marcar la misma informa que la anterior era ella', async () => {
+        const repo = await nuevo();
+        const { id } = await repo.crear(conJuego(datosValidos(), juegoUnico()));
+        await repo.marcarActiva(id);
+
+        const { anterior } = await repo.marcarActiva(id);
+
+        expect(anterior).toEqual({ id, numeroVersion: 1 });
+      });
+
+      it('una estampa archivada no se puede marcar', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const { id } = await repo.crear(conJuego(datosValidos(), juego));
+        await repo.archivar(id);
+
+        await expect(repo.marcarActiva(id)).rejects.toBeInstanceOf(
+          EstampaArchivadaError,
+        );
+        expect(await repo.activaDe(juego)).toBeNull();
+      });
+
+      it('archivar la activa deja el juego sin activa, y la siguiente no informa una anterior', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const { id } = await repo.crear(conJuego(datosValidos(), juego));
+        const otra = await repo.crear(conJuego(datosValidos(), juego));
+        await repo.marcarActiva(id);
+
+        await repo.archivar(id);
+
+        expect(await repo.activaDe(juego)).toBeNull();
+        expect(await activaDelJuego(repo, juego)).toHaveLength(0);
+        expect((await repo.marcarActiva(otra.id)).anterior).toBeNull();
+      });
+
+      it('una versión que no existe o una estampa que no existe fallan sin marcar nada', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const { id } = await repo.crear(conJuego(datosValidos(), juego));
+
+        await expect(repo.marcarActiva(id, 2)).rejects.toBeInstanceOf(
+          VersionNoEncontradaError,
+        );
+        await expect(repo.marcarActiva(randomUUID())).rejects.toBeInstanceOf(
+          EstampaNoEncontradaError,
+        );
+        expect(await repo.activaDe(juego)).toBeNull();
+      });
+
+      it('un juego sin activa devuelve null aunque tenga estampas: nunca elige por versión', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const { id } = await repo.crear(conJuego(datosValidos(), juego));
+        await repo.corregir(id, 1, {
+          ...conJuego(datosValidos(), juego),
+          notas: 'v2',
+        });
+
+        expect(await repo.activaDe(juego)).toBeNull();
+      });
+
+      it('activas trae una por juego, cada una con su juego', async () => {
+        const repo = await nuevo();
+        const juegoA = juegoUnico();
+        const juegoB = juegoUnico();
+        const a = await repo.crear(conJuego(datosValidos(), juegoA));
+        const b = await repo.crear(conJuego(datosRts(), juegoB));
+        await repo.marcarActiva(a.id);
+        await repo.marcarActiva(b.id);
+
+        const activas = (await repo.activas()).filter((x) =>
+          [juegoA, juegoB].includes(x.juego),
+        );
+
+        expect(activas.map((x) => [x.juego, x.estampa.id]).sort()).toEqual(
+          [
+            [juegoA, a.id],
+            [juegoB, b.id],
+          ].sort(),
+        );
+      });
+    });
+
+    describe('juegos', () => {
+      it('trae cada nombre de juego una vez, sin los que solo tienen estampas archivadas', async () => {
+        const repo = await nuevo();
+        const conDos = juegoUnico();
+        const archivado = juegoUnico();
+        await repo.crear(conJuego(datosValidos(), conDos));
+        await repo.crear(conJuego(datosValidos(), conDos));
+        const { id } = await repo.crear(conJuego(datosValidos(), archivado));
+        await repo.archivar(id);
+
+        const juegos = await repo.juegos();
+
+        expect(juegos.filter((j) => j === conDos)).toHaveLength(1);
+        expect(juegos).not.toContain(archivado);
       });
     });
 

@@ -6,6 +6,8 @@ import {
   LISTADO_LIMITE_MAXIMO,
   LISTADO_LIMITE_POR_DEFECTO,
 } from '@domain/estampa/index.js';
+import { leerIndiceDeActivas } from './activa.js';
+import { DIFERENCIA_ACTIVA_Y_MATCH } from './constants.js';
 import { buscarMatchesPerfectos, presentarMatch } from './matches.js';
 import { ANOTACIONES_LECTURA, protegido } from './tool-support.js';
 import type { ToolDeps } from './tool-support.js';
@@ -20,10 +22,12 @@ export function registerMatchesPerfectosTool(
       title: 'Matches perfectos',
       description:
         'Lista las estampas cuyo resultado está marcado como match perfecto, con su configuración (sistema y en el juego) y su resultado (rango en texto y certeza). ' +
-        'Se puede filtrar por juego y género. Las archivadas no salen salvo con incluirArchivadas. No compara rangos ni juzga: solo muestra lo registrado.',
+        'Se puede filtrar por juego y género. Las archivadas no salen salvo con incluirArchivadas. No compara rangos ni juzga: solo muestra lo registrado. ' +
+        `Cada una dice si es la activa de su juego. ${DIFERENCIA_ACTIVA_Y_MATCH}`,
       inputSchema: {
         juego: z
           .string()
+          .trim()
           .min(1)
           .optional()
           .describe('Nombre del juego (sin distinguir mayúsculas)'),
@@ -45,12 +49,13 @@ export function registerMatchesPerfectosTool(
           deps.repository,
           filtro,
         );
+        const indice = await leerIndiceDeActivas(deps.repository);
         return toolJson({
           devueltas: estampas.length,
           limite: filtro.limite,
           desplazamiento: filtro.desplazamiento,
           hayMas,
-          estampas: estampas.map(presentarMatch),
+          estampas: estampas.map((e) => presentarMatch(e, indice)),
         });
       }),
   );

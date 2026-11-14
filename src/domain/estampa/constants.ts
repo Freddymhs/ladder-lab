@@ -59,3 +59,8 @@ export const LISTADO_LIMITE_MAXIMO = 200;
 
 export const COMPARAR_MINIMO = 2;
 export const COMPARAR_MAXIMO = 10;
+
+/** Sugerencias de nombre de juego cuando el buscado no existe tal cual. */
+export const SUGERENCIAS_JUEGO_MAXIMO = 5;
+/** Ediciones (letras de más, de menos o cambiadas) que aún cuentan como «parecido». */
+export const SUGERENCIAS_JUEGO_DISTANCIA_MAXIMA = 2;

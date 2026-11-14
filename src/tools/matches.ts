@@ -1,6 +1,8 @@
 import type { EstampaRepository } from '@data/index.js';
 import type { Genero } from '@domain/estampa/index.js';
 import type { EstampaGuardada } from '@domain/estampa/index.js';
+import { resumirParaElegir } from './activa.js';
+import type { IndiceDeActivas } from './activa.js';
 
 export interface FiltroMatches {
   readonly juego?: string;
@@ -31,16 +33,13 @@ export async function buscarMatchesPerfectos(
 }
 
 /** El resultado se muestra tal cual: rango como texto y su certeza, sin ordenar ni juzgar. */
-export function presentarMatch(estampa: EstampaGuardada) {
-  const { juego, sistema, enJuego, resultado } = estampa.datos;
+export function presentarMatch(
+  estampa: EstampaGuardada,
+  indice: IndiceDeActivas,
+) {
+  const { sistema, enJuego, resultado } = estampa.datos;
   return {
-    id: estampa.id,
-    juego: juego.nombre,
-    genero: juego.genero,
-    etapa: juego.etapa,
-    fecha: juego.fecha,
-    numeroVersion: estampa.numeroVersion,
-    archivada: estampa.archivada,
+    ...resumirParaElegir(estampa, indice),
     resultado,
     configuracion: { sistema, enJuego },
   };
