@@ -61,9 +61,12 @@ const CABECERA = new Set([
   'archivada',
 ]);
 
+/** Fixture con TODOS los campos: cualquier fila de la tabla se puede quitar o cambiar. */
+const BASE_COMPLETA = 'estampa-completa.json';
+
 type Documento = Record<string, unknown>;
 const conValorEn = (ruta: string, valor: unknown): Documento => {
-  const copia = clonar(leerEjemplo('estampa-fps.json')) as Documento;
+  const copia = clonar(leerEjemplo(BASE_COMPLETA)) as Documento;
   const partes = ruta.split('.');
   const ultimo = partes.at(-1)!;
   const padre = partes
@@ -73,7 +76,7 @@ const conValorEn = (ruta: string, valor: unknown): Documento => {
   return copia;
 };
 const sinCampo = (ruta: string): Documento => {
-  const copia = clonar(leerEjemplo('estampa-fps.json')) as Documento;
+  const copia = clonar(leerEjemplo(BASE_COMPLETA)) as Documento;
   const partes = ruta.split('.');
   const padre = partes
     .slice(0, -1)
@@ -174,7 +177,7 @@ describe('la especificación publicada no miente', () => {
 
         expect(
           documentoEstampaSchema.safeParse({
-            ...(leerEjemplo('estampa-fps.json') as Documento),
+            ...(leerEjemplo(BASE_COMPLETA) as Documento),
             [campo]: valor,
           }).success,
         ).toBe(false);
@@ -199,10 +202,11 @@ describe('la especificación publicada no miente', () => {
     }
   });
 
-  it('la especificación nombra los cuatro fixtures publicados y existen', () => {
+  it('la especificación nombra los cinco fixtures publicados y existen', () => {
     for (const nombre of [
       'estampa-fps.json',
       'estampa-rts-no-aplica.json',
+      BASE_COMPLETA,
       'export-vigentes.json',
       'export-con-versiones.json',
     ]) {

@@ -142,6 +142,10 @@ Este ADR decía que la exportación incluye las estampas archivadas (para que ni
 
 Por orden de Freddy, `sistema.posicionWindows` (1–11) se renombró a `sistema.punteroWindows` (1–20) sin subir la versión del formato. La tabla y el ejemplo de arriba ya dicen el campo nuevo; el motivo y el contrato están en [`DECISION_PUNTERO_WINDOWS_20.md`](./DECISION_PUNTERO_WINDOWS_20.md). El nombre viejo ya no se acepta.
 
+## Cambio posterior: campos de configuración del sistema y del juego (2026-11-14)
+
+Por orden de Freddy se agregaron campos **opcionales** a `sistema` (`pantalla`, `entrada`, `general`) y a `enJuego` (modo de pantalla, FPS, VSync, resolución, `ejecutable`, `archivosConfig`) sin subir la versión: no cambia ningún campo de la tabla de arriba. El detalle y los límites están en [`DECISION_CONFIGURACION_COMPLETA.md`](./DECISION_CONFIGURACION_COMPLETA.md); la tabla publicada ya los lista.
+
 ## Qué queda abierto
 
 - El nombre `numeroVersion` (propuesta mía; ya implementado, renombrar cuesta un cambio de esquema y de fixtures).

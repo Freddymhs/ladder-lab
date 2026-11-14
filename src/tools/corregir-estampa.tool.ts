@@ -27,7 +27,8 @@ export function registerCorregirEstampaTool(
       description:
         'Corrige un dato equivocado de una estampa existente. Crea una versión nueva y conserva la anterior (nada se borra). ' +
         'Envía solo los campos que cambian, dentro de "cambios", con la misma forma que crear_estampa. ' +
-        'Si la configuración es distinta en otra etapa, usa crear_estampa en vez de corregir. No se puede quitar un campo opcional ya registrado.',
+        'Si la configuración es distinta en otra etapa, usa crear_estampa en vez de corregir. No se puede quitar un campo opcional ya registrado. ' +
+        'Las listas (exclusionesAntivirus, archivosConfig) se reemplazan enteras: envía la lista completa.',
       inputSchema: {
         id: z.string().uuid().describe('Id de la estampa'),
         cambios: cambiosSchema.describe('Solo los campos a corregir'),

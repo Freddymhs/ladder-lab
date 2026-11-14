@@ -7,7 +7,11 @@ import {
   ImportacionInvalidaError,
 } from '@domain/estampa/index.js';
 import type { DatosEstampa, EstampaImportable } from '@domain/estampa/index.js';
-import { datosRts, datosValidos } from '../../tools/__tests__/harness.js';
+import {
+  datosCompletos,
+  datosRts,
+  datosValidos,
+} from '../../tools/__tests__/harness.js';
 import type { EstampaRepository } from '../estampa.repository.js';
 
 const LISTADO = {
@@ -50,6 +54,15 @@ export function describirContratoDeRepositorio(
       expect(creada.totalVersiones).toBe(1);
       expect(creada.archivada).toBe(false);
       expect(leida).toEqual(creada);
+      expect(leida?.datos).toEqual(datos);
+    });
+
+    it('guarda y devuelve idénticos los campos de configuración, incluido el archivo entero', async () => {
+      const repo = await nuevo();
+      const datos = conJuego(datosCompletos(), juegoUnico());
+
+      const leida = await repo.obtener((await repo.crear(datos)).id);
+
       expect(leida?.datos).toEqual(datos);
     });
 

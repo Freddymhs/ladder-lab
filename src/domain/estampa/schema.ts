@@ -1,18 +1,27 @@
 import { z } from 'zod';
 import {
   ACELERACIONES_WINDOWS,
+  ARCHIVO_CONFIG_BYTES_MAX,
+  ARCHIVOS_CONFIG_MAX,
   CERTEZAS,
   DESCONOCIDO,
-  ESTADOS_RAW_INPUT,
+  DPI_OVERRIDES,
+  ESTADOS_ENCENDIDO,
   FORMATO_ESTAMPA,
   FORMATO_EXPORT,
   FORMATO_VERSION,
   GENEROS,
+  MODOS_PANTALLA,
+  NIGHT_LIGHT_INTENSIDAD_MAX,
+  NIVELES_UAC,
   NO_APLICA,
   PATRON_FECHA,
   PATRON_RESOLUCION,
   PUNTERO_WINDOWS_MAX,
   PUNTERO_WINDOWS_MIN,
+  TECLADO_RETARDO_MAX,
+  TECLADO_VELOCIDAD_MAX,
+  TOPE_FPS_SIN_TOPE,
 } from './constants.js';
 
 const esFechaReal = (valor: string): boolean => {
@@ -53,6 +62,57 @@ const noAplica = z.literal(NO_APLICA);
 const oDesconocido = <T extends z.ZodTypeAny>(valor: T) =>
   z.union([valor, desconocido]);
 
+/** `encendido`, `apagado` o `desconocido`: un interruptor del sistema o del juego. */
+const interruptor = z.enum([...ESTADOS_ENCENDIDO, DESCONOCIDO]);
+
+const nightLightSchema = z
+  .object({
+    estado: interruptor,
+    intensidad: oDesconocido(
+      z.number().int().min(0).max(NIGHT_LIGHT_INTENSIDAD_MAX),
+    ).optional(),
+  })
+  .strict();
+
+const pantallaSchema = z
+  .object({
+    escalaPct: oDesconocido(z.number().int().positive())
+      .optional()
+      .describe('Escala de la pantalla en %, p. ej. 100'),
+    hdr: interruptor.optional(),
+    autoHdr: interruptor.optional(),
+    nightLight: nightLightSchema.optional(),
+    perfilColor: textoOConocido
+      .optional()
+      .describe('Nombre del perfil de color asignado'),
+    vrr: interruptor.optional().describe('VRR / G-Sync'),
+  })
+  .strict();
+
+const entradaSchema = z
+  .object({
+    tecladoRetardo: oDesconocido(
+      z.number().int().min(0).max(TECLADO_RETARDO_MAX),
+    ).optional(),
+    tecladoVelocidad: oDesconocido(
+      z.number().int().min(0).max(TECLADO_VELOCIDAD_MAX),
+    ).optional(),
+  })
+  .strict();
+
+const generalSchema = z
+  .object({
+    uac: z.enum([...NIVELES_UAC, DESCONOCIDO]).optional(),
+    modoJuego: interruptor.optional(),
+    gameDvr: interruptor.optional(),
+    planEnergia: textoOConocido.optional(),
+    suspensionUsb: interruptor.optional(),
+    exclusionesAntivirus: oDesconocido(z.array(textoLibre))
+      .optional()
+      .describe('Lista de rutas o procesos excluidos del antivirus'),
+  })
+  .strict();
+
 const juegoSchema = z
   .object({
     nombre: textoLibre.describe('Nombre del juego'),
@@ -82,6 +142,33 @@ const sistemaSchema = z
     ),
     aceleracionWindows: z.enum([...ACELERACIONES_WINDOWS, DESCONOCIDO]),
     versionWindows: textoLibre.optional(),
+    pantalla: pantallaSchema.optional(),
+    entrada: entradaSchema.optional(),
+    general: generalSchema.optional(),
+  })
+  .strict();
+
+const ejecutableSchema = z
+  .object({
+    ruta: textoLibre.describe('Ruta del .exe del juego'),
+    optimizacionesPantallaCompleta: oDesconocido(z.boolean()).optional(),
+    ejecutarComoAdmin: oDesconocido(z.boolean()).optional(),
+    dpiOverride: z.enum([...DPI_OVERRIDES, DESCONOCIDO]).optional(),
+  })
+  .strict();
+
+const bytesDe = (texto: string): number =>
+  new TextEncoder().encode(texto).length;
+
+const archivoConfigSchema = z
+  .object({
+    ruta: textoLibre.describe('Ruta del archivo de configuración del juego'),
+    contenido: z
+      .string()
+      .refine((texto) => bytesDe(texto) <= ARCHIVO_CONFIG_BYTES_MAX, {
+        message: `El archivo pasa de ${ARCHIVO_CONFIG_BYTES_MAX} bytes`,
+      })
+      .describe('Texto entero del archivo, sin interpretar'),
   })
   .strict();
 
@@ -91,10 +178,29 @@ const enJuegoSchema = z
       .union([z.number().positive(), desconocido, noAplica])
       .describe('Número, "desconocido" o "no_aplica" si el juego no la tiene'),
     rawInput: z
-      .enum([...ESTADOS_RAW_INPUT, DESCONOCIDO, NO_APLICA])
+      .enum([...ESTADOS_ENCENDIDO, DESCONOCIDO, NO_APLICA])
       .describe('"no_aplica" si el juego no tiene raw input'),
     parametrosInicio: textoLibre.optional(),
     markC: z.boolean().optional(),
+    modoPantalla: z.enum([...MODOS_PANTALLA, DESCONOCIDO]).optional(),
+    topeFps: z
+      .union([
+        z.number().int().positive(),
+        z.literal(TOPE_FPS_SIN_TOPE),
+        desconocido,
+      ])
+      .optional()
+      .describe('Cuadros por segundo máximos, "sin_tope" o "desconocido"'),
+    vsync: interruptor.optional(),
+    resolucionJuego: oDesconocido(
+      z.string().regex(PATRON_RESOLUCION, 'Usa ANCHOxALTO, p. ej. 1920x1080'),
+    ).optional(),
+    ejecutable: ejecutableSchema.optional(),
+    archivosConfig: z
+      .array(archivoConfigSchema)
+      .max(ARCHIVOS_CONFIG_MAX)
+      .optional()
+      .describe('Archivos de configuración del juego, copiados enteros'),
   })
   .strict();
 

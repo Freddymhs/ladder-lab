@@ -67,3 +67,13 @@ export const textoDe = (resultado: Record<string, unknown>): string =>
 export const jsonDe = <T = Record<string, unknown>>(
   resultado: Record<string, unknown>,
 ): T => JSON.parse(textoDe(resultado)) as T;
+
+/** Estampa con todos los campos opcionales de configuración (fixture publicado, sin cabecera). */
+export function datosCompletos(): DatosEstampa {
+  const {
+    formato: _f,
+    version: _v,
+    ...datos
+  } = clonar(leerEjemplo('estampa-completa.json')) as Record<string, unknown>;
+  return datosEstampaSchema.parse(datos);
+}

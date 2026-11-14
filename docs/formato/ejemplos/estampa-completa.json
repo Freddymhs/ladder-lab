@@ -1,0 +1,66 @@
+{
+  "formato": "ladder-lab.estampa",
+  "version": 1,
+  "juego": {
+    "nombre": "Counter-Strike",
+    "genero": "FPS",
+    "fecha": "2025-06-01"
+  },
+  "sistema": {
+    "mouse": "Marca Modelo",
+    "dpi": 450,
+    "polling": 1000,
+    "resolucion": "1920x1080",
+    "hz": 240,
+    "punteroWindows": 10,
+    "aceleracionWindows": "apagada",
+    "pantalla": {
+      "escalaPct": 100,
+      "hdr": "encendido",
+      "autoHdr": "apagado",
+      "nightLight": {
+        "estado": "apagado",
+        "intensidad": "desconocido"
+      },
+      "perfilColor": "sRGB",
+      "vrr": "encendido"
+    },
+    "entrada": {
+      "tecladoRetardo": 1,
+      "tecladoVelocidad": 31
+    },
+    "general": {
+      "uac": "predeterminado",
+      "modoJuego": "encendido",
+      "gameDvr": "apagado",
+      "planEnergia": "Alto rendimiento",
+      "suspensionUsb": "apagado",
+      "exclusionesAntivirus": ["C:\\Juegos\\Juego"]
+    }
+  },
+  "enJuego": {
+    "sensibilidad": "desconocido",
+    "rawInput": "apagado",
+    "modoPantalla": "ventana_sin_bordes",
+    "topeFps": "sin_tope",
+    "vsync": "apagado",
+    "resolucionJuego": "1920x1080",
+    "ejecutable": {
+      "ruta": "C:\\Juegos\\Juego\\juego.exe",
+      "optimizacionesPantallaCompleta": false,
+      "ejecutarComoAdmin": false,
+      "dpiOverride": "aplicacion"
+    },
+    "archivosConfig": [
+      {
+        "ruta": "C:\\Juegos\\Juego\\cfg\\autoexec.cfg",
+        "contenido": "sensitivity \"1.8\"\nm_rawinput \"1\"\n"
+      }
+    ]
+  },
+  "resultado": {
+    "rango": "Global",
+    "certeza": "recordado",
+    "matchPerfecto": true
+  }
+}

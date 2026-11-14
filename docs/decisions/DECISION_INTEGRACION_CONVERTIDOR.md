@@ -6,9 +6,9 @@ Fecha: 2026-11-05 (tarea 4.3 de FASE_4)
 
 ## Qué se verificó
 
-`scripts/verificar-con-sens-lab.sh` pasa **salidas reales de ladder-lab** por el **importador y el mapeo reales de sens-lab** (importados en solo lectura desde `../sens-lab`; no se modificó nada de ese proyecto), y valida en sentido inverso los fixtures de sens-lab contra el esquema de ladder-lab. **12 comprobaciones, todas en verde:**
+`scripts/verificar-con-sens-lab.sh` pasa **salidas reales de ladder-lab** por el **importador y el mapeo reales de sens-lab** (importados en solo lectura desde `../sens-lab`; no se modificó nada de ese proyecto), y valida en sentido inverso los fixtures de sens-lab contra el esquema de ladder-lab. **13 comprobaciones, todas en verde (12 en F4; la 13.ª es el fixture `estampa-completa.json` de F6):**
 
-- sens-lab importa un documento suelto, la exportación normal, el respaldo con versiones y los cuatro fixtures publicados.
+- sens-lab importa un documento suelto, la exportación normal, el respaldo con versiones y los fixtures publicados.
 - sens-lab **puede citar el `id` de la estampa de origen** (`estampaOrigenId`), que es la razón de que toda exportación lleve `id`.
 - sens-lab no inventa lo que falta: una estampa con DPI `desconocido`, sensibilidad `no_aplica` y un juego fuera de su catálogo se mapea con `faltantes: [juego, sensibilidad, dpi, camino]`.
 - ladder-lab **acepta** la exportación que sens-lab usa como válida, y **rechaza** lo que sens-lab también rechaza (versión futura, campo inválido, formato equivocado).
