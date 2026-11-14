@@ -372,6 +372,28 @@ describe('listados listos para elegir', () => {
     expect(sinFecha?.etiqueta).not.toContain('✔');
   });
 
+  it('la etiqueta nombra el rango solo cuando se conoce: «desconocido (medido)» no dice nada al elegir', async () => {
+    const h = await crearHarness();
+    const base = conJuego(datosRts(), STARCRAFT);
+    await crear(h, {
+      ...base,
+      resultado: { ...base.resultado, rango: 'desconocido', certeza: 'medido' },
+    });
+    await crear(h, {
+      ...base,
+      resultado: { ...base.resultado, rango: 'Diamante', certeza: 'medido' },
+    });
+
+    const { estampas } = jsonDe<{ estampas: Item[] }>(
+      await llamar(h, 'listar_estampas', { juego: STARCRAFT }),
+    );
+    const sinRango = estampas.find((e) => e.rango === 'desconocido');
+    const conRango = estampas.find((e) => e.rango === 'Diamante');
+
+    expect(sinRango?.etiqueta).not.toContain('desconocido');
+    expect(conRango?.etiqueta).toContain('rango Diamante (medido)');
+  });
+
   it('activa_por_juego trae también las demás del juego para elegir otra', async () => {
     const h = await crearHarness();
     const activa = await crear(h);

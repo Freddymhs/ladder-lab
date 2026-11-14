@@ -1,5 +1,5 @@
 import type { EstampaRepository } from '@data/index.js';
-import { PATRON_FECHA } from '@domain/estampa/index.js';
+import { DESCONOCIDO, PATRON_FECHA } from '@domain/estampa/index.js';
 import type {
   EstampaActiva,
   EstampaGuardada,
@@ -70,7 +70,10 @@ export function resumirParaElegir(
     juego.etapa ?? SIN_ETAPA,
     `v${estampa.numeroVersion}`,
     fecha,
-    `${resultado.rango} (${resultado.certeza})`,
+    // El rango solo dice algo si se conoce: «desconocido (medido)» confunde al elegir un corazón.
+    ...(resultado.rango === DESCONOCIDO
+      ? []
+      : [`rango ${resultado.rango} (${resultado.certeza})`]),
     ...textoActiva,
   ].join(SEPARADOR_ETIQUETA);
   return {
