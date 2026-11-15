@@ -4,8 +4,8 @@
 
 | qué       | dónde                                                                                           |
 | --------- | ----------------------------------------------------------------------------------------------- |
-| MCP       | `https://mac-mini-server.tail1798c7.ts.net:8446/mcp`                                            |
-| sens-lab  | `https://mac-mini-server.tail1798c7.ts.net:8445`                                                |
+| MCP       | `https://<host-del-servidor>.ts.net:8446/mcp`                                                   |
+| sens-lab  | `https://<host-del-servidor>.ts.net:8445`                                                       |
 | Pila      | `~/apps/lab-stack` en el Mac, proyecto Compose `lab`; puertos solo en `127.0.0.1` (3011 y 3012) |
 | Secretos  | `~/.config/lab/` en ThinkPad y Mac, carpeta 700 y archivos 600. Nunca en el repo                |
 | Monitores | Uptime Kuma: `ladder-lab :3011`, `sens-lab :3012` y `respaldo lab (push diario)`                |
@@ -36,7 +36,7 @@ El equipo debe estar en la tailnet. El token está en `~/.config/lab/secretos.js
 
 ```bash
 claude mcp add --transport http --scope user ladder-lab \
-  https://mac-mini-server.tail1798c7.ts.net:8446/mcp \
+  https://<host-del-servidor>.ts.net:8446/mcp \
   --header "Authorization: Bearer <TOKEN>"
 ```
 
