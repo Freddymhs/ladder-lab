@@ -4,7 +4,7 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 
 ## Estado actual
 
-**F0 a F7 implementadas (F7 el 2026-11-14, desplegada y con su migración aplicada). Desplegado el 2026-11-05 en el Mac Mini con base en Neon** (`DECISION_BASE_NEON.md`), sin datos reales todavía. Operación en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md); lo abierto, en «Pendientes reales».
+**F0 a F7 implementadas (F7 el 2026-11-14, desplegada y con su migración aplicada). Desplegado el 2026-11-05 en el Mac Mini con base en Neon** (`DECISION_BASE_NEON.md`), con datos reales (7 estampas vigentes al 2026-11-15, de 6 juegos). Operación en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md); lo abierto, en «Pendientes reales».
 **Orden de fases acordado (2026-11-05):** F0 → F1 → **F3** → F2 → F4. F3 va antes que F2.
 
 ## Fases

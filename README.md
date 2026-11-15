@@ -6,7 +6,7 @@ MCP personal para registrar estampas de configuración por juego y etapa. Concep
 
 Servidor MCP (TypeScript, Node 22, Zod) con transporte stdio para desarrollo y Streamable HTTP con token para el Mac Mini. Un solo usuario, sin interfaz web.
 
-**Estado:** F0 a F4 implementadas y **desplegadas el 2026-11-05** en el Mac Mini, con base en Neon y sin datos reales todavía. Operación: [`docs/runbooks/PUESTA_EN_MARCHA.md`](docs/runbooks/PUESTA_EN_MARCHA.md).
+**Estado:** F0 a F7 implementadas y desplegadas en el Mac Mini (primera puesta el 2026-11-05), con base en Neon y datos reales: estampas de StarCraft II, Battlefield 6 y los «antes» de cada juego ajustado. F7 (2026-11-14) agrega la estampa activa por juego. Operación: [`docs/runbooks/PUESTA_EN_MARCHA.md`](docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ## Inicio rápido
 
