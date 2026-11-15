@@ -711,6 +711,24 @@ export function describirContratoDeRepositorio(
         expect(await repo.activaDe(juego)).toBeNull();
       });
 
+      it('renombrar el juego y marcar la versión nueva deja la estampa activa solo en su juego actual', async () => {
+        const repo = await nuevo();
+        const viejo = juegoUnico();
+        const nuevoNombre = juegoUnico();
+        const datos = conJuego(datosValidos(), viejo);
+        const { id } = await repo.crear(datos);
+        await repo.marcarActiva(id);
+        await repo.corregir(id, 1, conJuego(datos, nuevoNombre));
+
+        await repo.marcarActiva(id);
+
+        expect(await repo.activaDe(viejo)).toBeNull();
+        expect((await repo.activaDe(nuevoNombre))?.estampa.id).toBe(id);
+        expect(
+          (await repo.activas()).filter((a) => a.estampa.id === id),
+        ).toHaveLength(1);
+      });
+
       it('activas trae una por juego, cada una con su juego', async () => {
         const repo = await nuevo();
         const juegoA = juegoUnico();

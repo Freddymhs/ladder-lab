@@ -247,6 +247,12 @@ export class InMemoryEstampaRepository implements EstampaRepository {
       numeroVersion: numero,
       elegidaEn: this.ahora().toISOString(),
     };
+    // Una estampa es activa en un solo juego: el suyo actual (igual que la RPC).
+    for (const [otraClave, activa] of this.activasPorJuego) {
+      if (activa.id === id && otraClave !== clave) {
+        this.activasPorJuego.delete(otraClave);
+      }
+    }
     this.activasPorJuego.set(clave, nueva);
     return {
       activa: this.presentarActiva(nueva, estampa),

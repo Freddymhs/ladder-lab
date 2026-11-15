@@ -88,6 +88,24 @@ describe.skipIf(!urlAdmin)(
       ).toBe(`1|${segunda}`);
     });
 
+    it('renombrar el juego y marcar la versión nueva borra la fila del nombre viejo: una estampa, un solo juego', () => {
+      const viejo = juegoUnico();
+      const nuevoNombre = juegoUnico();
+      const id = crear(datos(viejo));
+      marcar(id);
+      sql(
+        `select public.corregir_estampa('${id}', 1, ${literalJson(datos(nuevoNombre))}, 1)`,
+      );
+
+      const marcado = marcar(id);
+
+      expect(marcado).toMatchObject({ juego: nuevoNombre, numeroVersion: 2 });
+      expect(marcado.anterior).toBeNull();
+      expect(
+        sql(`select juego from estampas_activas where estampa_id = '${id}'`),
+      ).toBe(nuevoNombre);
+    });
+
     it('rechaza una archivada (LL005), una versión inexistente (LL006) y una estampa inexistente (LL001)', () => {
       const archivada = crear(datos(juegoUnico()));
       sql(`select public.archivar_estampa('${archivada}')`);
@@ -198,6 +216,25 @@ describe.skipIf(!urlAdmin)(
         expect(
           falla(`set role service_role; truncate estampas_activas`),
         ).toMatch(DENEGADO);
+      });
+
+      it('service_role renombra y marca: la RPC borra la fila vieja aunque él no pueda borrar', (ctx) => {
+        if (!hayRoles()) ctx.skip();
+        const viejo = juegoUnico();
+        const nuevoNombre = juegoUnico();
+        const id = crear(datos(viejo));
+        marcar(id);
+        sql(
+          `select public.corregir_estampa('${id}', 1, ${literalJson(datos(nuevoNombre))}, 1)`,
+        );
+
+        sql(
+          `set role service_role; select public.marcar_estampa_activa('${id}')`,
+        );
+
+        expect(
+          sql(`select juego from estampas_activas where estampa_id = '${id}'`),
+        ).toBe(nuevoNombre);
       });
     });
   },

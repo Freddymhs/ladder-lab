@@ -81,7 +81,7 @@ Desplegado y verificado el 2026-11-05. Lo que sigue depende de uso real o de una
 
 5. **Falta herramienta para desarchivar.** El concepto solo nombra «archivar». Pregunta: ¿necesitás poder desarchivar?
 
-6. **El respaldo JSON no lleva las estampas activas** (`exportar` y `pnpm respaldo`; `pg_dump` sí). Restaurar un respaldo JSON deja todos los juegos sin activa. Detalle y otros cuatro pendientes de F7 (bug de renombrar el juego, marcado no atómico, géneros, volver al «antes») en [`FASE_7`](./FASE_7_ESTAMPA_ACTIVA.md), sección «Pendientes».
+6. **El respaldo JSON no lleva las estampas activas** (`exportar` y `pnpm respaldo`; `pg_dump` sí). Restaurar un respaldo JSON deja todos los juegos sin activa. Detalle y otros cuatro pendientes de F7 (marcado no atómico, géneros, volver al «antes»; el bug de renombrar el juego quedó arreglado el 2026-11-15, migración sin aplicar) en [`FASE_7`](./FASE_7_ESTAMPA_ACTIVA.md), sección «Pendientes».
 
 **Cerrado:** ~~Conectar el PC de juegos al MCP~~ — hecho el 2026-11-14: el Windows RTS tiene `ladder-lab` en `~/.claude.json`.
 
