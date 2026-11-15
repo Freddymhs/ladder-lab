@@ -184,6 +184,26 @@ describe('datosEstampaSchema — palabras reservadas en los campos de texto', ()
     },
   );
 
+  it('juego.nombre se guarda sin espacios en los bordes', () => {
+    const resultado = datosEstampaSchema.safeParse(
+      conCambio('juego', 'nombre', '  StarCraft II \t'),
+    );
+    expect(resultado.success).toBe(true);
+    expect(resultado.success && resultado.data.juego.nombre).toBe(
+      'StarCraft II',
+    );
+  });
+
+  it.each(['   ', ' desconocido ', ' no_aplica'])(
+    'juego.nombre "%s" no pasa por tener solo espacios o una palabra reservada',
+    (nombre) => {
+      expect(
+        datosEstampaSchema.safeParse(conCambio('juego', 'nombre', nombre))
+          .success,
+      ).toBe(false);
+    },
+  );
+
   it('mouse acepta "desconocido" pero nunca "no_aplica"', () => {
     expect(
       datosEstampaSchema.safeParse(conCambio('sistema', 'mouse', 'desconocido'))

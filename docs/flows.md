@@ -4,7 +4,7 @@
 > Llenar cada flujo después de probarlo. Útil como guía para `/tools:testing:run-browser-testing`.
 > Aquí no hay interfaz web: el «usuario» es Freddy hablando con Claude Code en el PC de juegos, y los pasos son llamadas a herramientas MCP.
 >
-> Última actualización: 2026-11-05 (flujos de F1 llenados con lo verificado automáticamente; cada flujo dice qué falta contra el servidor real)
+> Última actualización: 2026-11-14 (flujo de estampa activa, F7; los de F1 de 2026-11-05 llenados con lo verificado automáticamente; cada flujo dice qué falta contra el servidor real)
 
 ---
 
@@ -514,5 +514,15 @@
 - Sin `incluirVersiones` en la exportación, cada estampa se restaura como versión 1
 
 **Verificación:** pruebas de herramienta (incluida la ida y vuelta exportar → importar entre dos servidores, idéntica), contrato y SQL real. contra el Supabase real: **pendiente** (exige credenciales; ver docs/runbooks/PUESTA_EN_MARCHA.md).
+
+---
+
+## Módulo: Estampa activa (F7)
+
+### Flujo: marcar la activa y que gameconfig la lea
+
+Freddy pide `marcar_activa` (id y, si quiere, versión; antes de `marcarActiva` en crear o corregir, Claude le pregunta) → queda una sola activa por juego, fijada a esa versión; corregir la estampa no la mueve hasta marcar otra. Después `/gameconfig:run-rts` o `/gameconfig:run-fps` llama a `activa_por_juego` con el nombre del juego y aplica esa configuración; el nombre se compara sin mayúsculas ni espacios en los bordes y, si no existe, sugiere el parecido («Starcraft 2» → «StarCraft II»).
+
+**Verificación:** pruebas de herramienta, contrato (memoria y PostgREST real) y SQL real. contra el servidor real: `listar_estampas` ya devuelve `activa`/`versionActiva` (migración `20261114120000_estampa_activa.sql` aplicada el 2026-11-14); falta correr `/gameconfig:run-rts` leyendo la activa. Bug abierto: renombrar el juego con `corregir_estampa` y marcar la versión nueva la deja activa en dos juegos (`docs/backlog/FASE_7_ESTAMPA_ACTIVA.md`, pendiente a).
 
 ---

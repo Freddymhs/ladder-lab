@@ -4,7 +4,7 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 
 ## Estado actual
 
-**F0 a F4 implementadas. Desplegado el 2026-11-05 en el Mac Mini con base en Neon** (`DECISION_BASE_NEON.md`), sin datos reales todavía. Operación en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md); lo abierto, en «Pendientes reales».
+**F0 a F7 implementadas (F7 el 2026-11-14, desplegada y con su migración aplicada). Desplegado el 2026-11-05 en el Mac Mini con base en Neon** (`DECISION_BASE_NEON.md`), sin datos reales todavía. Operación en [`PUESTA_EN_MARCHA.md`](../runbooks/PUESTA_EN_MARCHA.md); lo abierto, en «Pendientes reales».
 **Orden de fases acordado (2026-11-05):** F0 → F1 → **F3** → F2 → F4. F3 va antes que F2.
 
 ## Fases
@@ -18,8 +18,9 @@ Backlog estructurado del proyecto. Generado el 2026-11-05 desde [`../_CONCEPTO.m
 | [FASE_4](./FASE_4_CONVERTIDOR.md)            | Integración con el convertidor                              | hecha y verificada contra sens-lab; falta una exportación real        | 3      | concepto F4                                 |
 | [FASE_5](./FASE_5_PUNTERO_EN_20_PUNTOS.md)   | Velocidad del puntero en 20 puntos                          | hecha y desplegada (2026-11-10); falta cargar la primera estampa real | 7      | orden de Freddy del 2026-11-10              |
 | [FASE_6](./FASE_6_CONFIGURACION_COMPLETA.md) | Configuración del sistema y del juego en la estampa         | hecha y desplegada (2026-11-14); falta cargar la primera estampa real | 7      | pedido de Freddy del 2026-11-14             |
+| [FASE_7](./FASE_7_ESTAMPA_ACTIVA.md)         | Estampa activa por juego                                    | hecha y desplegada (2026-11-14)                                       | 6      | pedido de Freddy del 2026-11-14             |
 
-Total: **47 tareas** en 7 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
+Total: **53 tareas** en 8 fases. Los archivos conservan su número de fase del concepto aunque F3 se ejecute antes que F2.
 
 ## Decisiones cerradas (no se reabren)
 
@@ -80,7 +81,9 @@ Desplegado y verificado el 2026-11-05. Lo que sigue depende de uso real o de una
 
 5. **Falta herramienta para desarchivar.** El concepto solo nombra «archivar». Pregunta: ¿necesitás poder desarchivar?
 
-6. **Conectar el PC de juegos al MCP.** Al llegar a Arica, con el equipo en la tailnet (runbook, «Conectar otro equipo»).
+6. **El respaldo JSON no lleva las estampas activas** (`exportar` y `pnpm respaldo`; `pg_dump` sí). Restaurar un respaldo JSON deja todos los juegos sin activa. Detalle y otros cuatro pendientes de F7 (bug de renombrar el juego, marcado no atómico, géneros, volver al «antes») en [`FASE_7`](./FASE_7_ESTAMPA_ACTIVA.md), sección «Pendientes».
+
+**Cerrado:** ~~Conectar el PC de juegos al MCP~~ — hecho el 2026-11-14: el Windows RTS tiene `ladder-lab` en `~/.claude.json`.
 
 ## Diagramas de Referencia
 

@@ -42,12 +42,25 @@ const desconocido = z.literal(DESCONOCIDO);
  * Texto que NO acepta ninguna palabra reservada: es un dato, no un marcador.
  * Sin esto `nombre: "desconocido"` pasaría como un nombre más.
  */
+const noEsPalabraReservada = (v: string) =>
+  v !== DESCONOCIDO && v !== NO_APLICA;
+const MENSAJE_PALABRA_RESERVADA = `"${DESCONOCIDO}" y "${NO_APLICA}" son valores reservados aquí`;
+
 const textoLibre = z
   .string()
   .min(1)
-  .refine((v) => v !== DESCONOCIDO && v !== NO_APLICA, {
-    message: `"${DESCONOCIDO}" y "${NO_APLICA}" son valores reservados aquí`,
-  });
+  .refine(noEsPalabraReservada, { message: MENSAJE_PALABRA_RESERVADA });
+
+/**
+ * Como `textoLibre`, pero recorta los bordes antes de validar: el nombre del
+ * juego es la clave con la que se busca la estampa activa («StarCraft II »
+ * no debe ser otro juego). Los demás textos libres se guardan tal cual.
+ */
+const nombreDeJuego = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(noEsPalabraReservada, { message: MENSAJE_PALABRA_RESERVADA });
 
 /** Texto que acepta `desconocido` (campo obligatorio) pero nunca `no_aplica`. */
 const textoOConocido = z
@@ -115,7 +128,7 @@ const generalSchema = z
 
 const juegoSchema = z
   .object({
-    nombre: textoLibre.describe('Nombre del juego'),
+    nombre: nombreDeJuego.describe('Nombre del juego'),
     genero: z.enum(GENEROS).describe('FPS o RTS'),
     etapa: textoOConocido
       .optional()
