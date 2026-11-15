@@ -27,3 +27,43 @@ jobs:
       - run: pnpm type-check
       - run: pnpm build
       - run: pnpm test
+
+  # Las *.int.spec.ts (migraciones y RPC SQL) no corren en `pnpm test`. Cada spec crea su base
+  # temporal y aplica todas las migraciones; no toca Neon (psql.ts rechaza hosts no locales).
+  integracion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGPASSWORD: ci
+      TEST_DATABASE_URL: postgresql://postgres:ci@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Roles que Supabase trae y un Postgres plano no: sin ellos los tests de permisos se saltan en silencio.
+      - name: Roles de Supabase
+        run: >-
+          psql -h localhost -U postgres -X -v ON_ERROR_STOP=1 -c
+          "create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;"
+      - name: Tests de integración (SQL real)
+        run: pnpm test:integration --reporter=default --reporter=json --outputFile=resultado-int.json
+      # Todo lo que no sea la spec de PostgREST debe haber corrido y pasado: denominador > 0 y 0 saltados.
+      - name: Verificar que nada se saltó
+        run: >-
+          jq -e '[.testResults[] | select(.name | test("supabase-estampa") | not) | .assertionResults[]]
+          | (map(select(.status != "passed")) | length) == 0 and length > 0' resultado-int.json
