@@ -21,7 +21,7 @@ F1 tiene un alcance cerrado: 5 herramientas, esquema, versiones, formato JSON y 
 
 ## Comandos
 
-`pnpm lint` · `pnpm type-check` · `pnpm build` · `pnpm test`. Verificar los cuatro tras cada cambio. `pnpm test:integration` (o `scripts/test-integracion.sh`, que levanta contenedores desechables) prueba el SQL y el repositorio de Supabase contra Postgres y PostgREST reales.
+`pnpm lint` · `pnpm type-check` · `pnpm build` · `pnpm test`. Verificar los cuatro tras cada cambio. `pnpm test:integration` (o `scripts/test-integracion.sh`, que levanta contenedores desechables) prueba el SQL y el repositorio de Supabase contra Postgres y PostgREST reales; en CI corren en el job `integracion`.
 
 ## Estructura y convenciones del repo
 

@@ -25,19 +25,19 @@ Sin base de datos se puede correr `pnpm test`: las pruebas usan un doble en memo
 
 ## Scripts
 
-| Script                              | Descripción                                                                                                                                   |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                          | Arranque con recarga (tsx watch)                                                                                                              |
-| `pnpm build`                        | Compila TypeScript y resuelve los alias                                                                                                       |
-| `pnpm start`                        | Ejecuta el build                                                                                                                              |
-| `pnpm test`                         | Pruebas (Vitest); no tocan ninguna base                                                                                                       |
-| `pnpm respaldo`                     | Respaldo completo y verificado (`--verificar <archivo>` comprueba uno); ver `docs/decisions/DECISION_RESPALDO.md`                             |
-| `pnpm restaurar <archivo>`          | Simula una restauración; con `--aplicar` la hace                                                                                              |
-| `pnpm test:integration`             | Pruebas contra Postgres/PostgREST reales; sin base se saltan y lo dicen. Con contenedores desechables: `scripts/test-integracion.sh`          |
-| `scripts/verificar-con-sens-lab.sh` | Prueba el contrato JSON con el importador real de sens-lab, el convertidor de sensibilidad hermano (en solo lectura); sale 1 si algo se rompe |
-| `scripts/medir-indices.sh`          | Mide las consultas con `EXPLAIN ANALYZE` sobre datos sintéticos en un Postgres desechable                                                     |
-| `pnpm lint`                         | ESLint + Prettier sobre `src/`                                                                                                                |
-| `pnpm type-check`                   | Tipos sin emitir                                                                                                                              |
+| Script                              | Descripción                                                                                                                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                          | Arranque con recarga (tsx watch)                                                                                                                                           |
+| `pnpm build`                        | Compila TypeScript y resuelve los alias                                                                                                                                    |
+| `pnpm start`                        | Ejecuta el build                                                                                                                                                           |
+| `pnpm test`                         | Pruebas (Vitest); no tocan ninguna base                                                                                                                                    |
+| `pnpm respaldo`                     | Respaldo completo y verificado (`--verificar <archivo>` comprueba uno); ver `docs/decisions/DECISION_RESPALDO.md`                                                          |
+| `pnpm restaurar <archivo>`          | Simula una restauración; con `--aplicar` la hace                                                                                                                           |
+| `pnpm test:integration`             | Pruebas contra Postgres/PostgREST reales; sin base se saltan y lo dicen. Con contenedores desechables: `scripts/test-integracion.sh`. En CI corren en el job `integracion` |
+| `scripts/verificar-con-sens-lab.sh` | Prueba el contrato JSON con el importador real de sens-lab, el convertidor de sensibilidad hermano (en solo lectura); sale 1 si algo se rompe                              |
+| `scripts/medir-indices.sh`          | Mide las consultas con `EXPLAIN ANALYZE` sobre datos sintéticos en un Postgres desechable                                                                                  |
+| `pnpm lint`                         | ESLint + Prettier sobre `src/`                                                                                                                                             |
+| `pnpm type-check`                   | Tipos sin emitir                                                                                                                                                           |
 
 ## Configuración
 
