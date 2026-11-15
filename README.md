@@ -6,32 +6,38 @@ MCP personal para registrar estampas de configuración por juego y etapa. Concep
 
 Servidor MCP (TypeScript, Node 22, Zod) con transporte stdio para desarrollo y Streamable HTTP con token para el Mac Mini. Un solo usuario, sin interfaz web.
 
+**Estampa:** foto fechada de la configuración de Windows y de un juego, con su resultado; una por juego y momento. **F0-F7** son las fases del [backlog](docs/backlog/README.md).
+
 **Estado:** F0 a F7 implementadas y desplegadas en el Mac Mini (primera puesta el 2026-11-05), con base en Neon y datos reales: estampas de StarCraft II, Battlefield 6 y los «antes» de cada juego ajustado. F7 (2026-11-14) agrega la estampa activa por juego. Operación: [`docs/runbooks/PUESTA_EN_MARCHA.md`](docs/runbooks/PUESTA_EN_MARCHA.md).
 
 ## Inicio rápido
 
 ```bash
 pnpm install
+cp .env.example .env   # completar SUPABASE_URL y SUPABASE_SERVICE_KEY
+set -a; . ./.env; set +a   # las variables no se cargan solas
 pnpm dev
 ```
 
-`pnpm dev` arranca por stdio. Las variables de entorno no se cargan solas: expórtalas o usa `node --env-file=.env`.
+`pnpm dev` arranca por stdio, pero **no arranca sin `SUPABASE_URL` y `SUPABASE_SERVICE_KEY`**: `src/config/env.ts` las exige fuera de `NODE_ENV=test` y el proceso termina con el nombre de la variable que falta. Hace falta una API PostgREST con las migraciones de `supabase/migrations/` aplicadas: un proyecto Supabase, o PostgREST sobre Neon como en producción (`docs/decisions/DECISION_BASE_NEON.md`, pasos en `docs/runbooks/PUESTA_EN_MARCHA.md`).
+
+Sin base de datos se puede correr `pnpm test`: las pruebas usan un doble en memoria y no tocan ninguna base.
 
 ## Scripts
 
-| Script                              | Descripción                                                                                                                          |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm dev`                          | Arranque con recarga (tsx watch)                                                                                                     |
-| `pnpm build`                        | Compila TypeScript y resuelve los alias                                                                                              |
-| `pnpm start`                        | Ejecuta el build                                                                                                                     |
-| `pnpm test`                         | Pruebas (Vitest); no tocan ninguna base                                                                                              |
-| `pnpm respaldo`                     | Respaldo completo y verificado (`--verificar <archivo>` comprueba uno); ver `docs/decisions/DECISION_RESPALDO.md`                    |
-| `pnpm restaurar <archivo>`          | Simula una restauración; con `--aplicar` la hace                                                                                     |
-| `pnpm test:integration`             | Pruebas contra Postgres/PostgREST reales; sin base se saltan y lo dicen. Con contenedores desechables: `scripts/test-integracion.sh` |
-| `scripts/verificar-con-sens-lab.sh` | Prueba el contrato JSON con el importador real de sens-lab (en solo lectura); sale 1 si algo se rompe                                |
-| `scripts/medir-indices.sh`          | Mide las consultas con `EXPLAIN ANALYZE` sobre datos sintéticos en un Postgres desechable                                            |
-| `pnpm lint`                         | ESLint + Prettier sobre `src/`                                                                                                       |
-| `pnpm type-check`                   | Tipos sin emitir                                                                                                                     |
+| Script                              | Descripción                                                                                                                                   |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                          | Arranque con recarga (tsx watch)                                                                                                              |
+| `pnpm build`                        | Compila TypeScript y resuelve los alias                                                                                                       |
+| `pnpm start`                        | Ejecuta el build                                                                                                                              |
+| `pnpm test`                         | Pruebas (Vitest); no tocan ninguna base                                                                                                       |
+| `pnpm respaldo`                     | Respaldo completo y verificado (`--verificar <archivo>` comprueba uno); ver `docs/decisions/DECISION_RESPALDO.md`                             |
+| `pnpm restaurar <archivo>`          | Simula una restauración; con `--aplicar` la hace                                                                                              |
+| `pnpm test:integration`             | Pruebas contra Postgres/PostgREST reales; sin base se saltan y lo dicen. Con contenedores desechables: `scripts/test-integracion.sh`          |
+| `scripts/verificar-con-sens-lab.sh` | Prueba el contrato JSON con el importador real de sens-lab, el convertidor de sensibilidad hermano (en solo lectura); sale 1 si algo se rompe |
+| `scripts/medir-indices.sh`          | Mide las consultas con `EXPLAIN ANALYZE` sobre datos sintéticos en un Postgres desechable                                                     |
+| `pnpm lint`                         | ESLint + Prettier sobre `src/`                                                                                                                |
+| `pnpm type-check`                   | Tipos sin emitir                                                                                                                              |
 
 ## Configuración
 
@@ -68,7 +74,7 @@ Copia `.env.example` a `.env` (nunca se sube al repo). Se valida al arrancar y e
 | `marcar_activa`       | Marca la estampa que Freddy usa hoy en su juego (una por juego, fijada a una versión; por defecto la última)               |
 | `activa_por_juego`    | La activa de un juego, con la versión entera (Windows, `.exe`, `archivosConfig`); si no hay, lo dice y sugiere nombres     |
 
-**Activa no es match perfecto.** La activa es la configuración que Freddy usa hoy: exactamente una por juego, elegida a mano con `marcar_activa` (o con `marcarActiva: true` en `crear_estampa`/`corregir_estampa`, siempre preguntándole antes). Es lo que lee `/gameconfig:run-rts` como fuente de verdad. Match perfecto es una marca de calidad del resultado y puede haber muchas. Nada elige la activa por número de versión ni por match perfecto. Corregir la activa crea la versión N+1 pero la activa sigue en N hasta marcarla; archivarla deja el juego sin activa. `listar_estampas`, `activa_por_juego` y `mejor_por_juego` traen en cada estampa juego, género, etapa, versión, fecha, rango, certeza, `activa` y una `etiqueta` para armar un selector. Los nombres de juego no distinguen mayúsculas ni espacios en los extremos.
+**Activa no es match perfecto.** La activa es la configuración que Freddy usa hoy: exactamente una por juego, elegida a mano con `marcar_activa` (o con `marcarActiva: true` en `crear_estampa`/`corregir_estampa`, siempre preguntándole antes). Es lo que lee `/gameconfig:run-rts` (comandos `/gameconfig:*` de Claude Code, que leen la estampa activa) como fuente de verdad. Match perfecto es una marca de calidad del resultado y puede haber muchas. Nada elige la activa por número de versión ni por match perfecto. Corregir la activa crea la versión N+1 pero la activa sigue en N hasta marcarla; archivarla deja el juego sin activa. `listar_estampas`, `activa_por_juego` y `mejor_por_juego` traen en cada estampa juego, género, etapa, versión, fecha, rango, certeza, `activa` y una `etiqueta` para armar un selector. Los nombres de juego no distinguen mayúsculas ni espacios en los extremos.
 
 Migraciones en `supabase/migrations/`, en orden; la de la estampa activa es `20261114120000_estampa_activa.sql` (tabla `estampas_activas`, vistas `estampas_activas_detalle` y `juegos_registrados`, función `marcar_estampa_activa`). Cómo aplicarlas: `docs/runbooks/PUESTA_EN_MARCHA.md`.
 
@@ -113,7 +119,7 @@ docker run -d --restart unless-stopped \
   ladder-lab
 ```
 
-La imagen corre como usuario no root, solo con dependencias de producción, y trae un `HEALTHCHECK` contra `/healthz`. El archivo de entorno vive fuera del repo. Cómo se despliega desde el ThinkPad: `docs/backlog/FASE_1_REGISTRAR_Y_NO_PERDER.md`, tarea 1.11 (supuesto: igual que `hylian-mcp`, sin confirmar).
+La imagen corre como usuario no root, solo con dependencias de producción, y trae un `HEALTHCHECK` contra `/healthz`. El archivo de entorno vive fuera del repo. Cómo se despliega desde el ThinkPad: [`deploy/desplegar.sh`](deploy/desplegar.sh) (a mano, por `git archive` y `ssh`; el push no despliega). Decisión y análisis en [`docs/decisions/DECISION_DEPLOY.md`](docs/decisions/DECISION_DEPLOY.md).
 
 ## Cliente (Claude Code en el PC de juegos)
 
