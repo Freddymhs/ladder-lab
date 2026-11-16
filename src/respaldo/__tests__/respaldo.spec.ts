@@ -12,7 +12,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InMemoryEstampaRepository } from '@data/index.js';
-import { planificarImportacion } from '@domain/estampa/index.js';
+import {
+  activasDeEnvoltorio,
+  planificarImportacion,
+} from '@domain/estampa/index.js';
+import { reponerActivas } from '@data/index.js';
 import { datosRts, datosValidos } from '../../tools/__tests__/harness.js';
 import {
   ejecutarRespaldo,
@@ -339,5 +343,102 @@ describe('restaurar un respaldo en una base vacía (3.4)', () => {
 
     await expect(verificarRespaldo(archivo)).rejects.toThrow();
     expect(await destino.todas({ incluirVersiones: true })).toHaveLength(0);
+  });
+});
+
+describe('el respaldo lleva las estampas activas', () => {
+  const claveDeActivas = async (repo: InMemoryEstampaRepository) =>
+    (await repo.activas()).map((a) => [
+      a.juego,
+      a.estampa.id,
+      a.estampa.numeroVersion,
+    ]);
+
+  /** La activa queda fijada a la versión 1 aunque la estampa ya vaya por la 2. */
+  async function repositorioConActivas(): Promise<InMemoryEstampaRepository> {
+    const repo = await repositorioConDatos();
+    const [primera] = await repo.listar({
+      incluirArchivadas: false,
+      limite: 10,
+      desplazamiento: 0,
+    });
+    await repo.marcarActiva(primera!.id, 1);
+    return repo;
+  }
+
+  it('el respaldo trae las activas con su versión y el resumen las cuenta', async () => {
+    const origen = await repositorioConActivas();
+
+    const resumen = await ejecutarRespaldo(origen, opciones());
+    const { envoltorio, activas } = await verificarRespaldo(resumen.archivo);
+
+    expect(resumen.activas).toBe(1);
+    expect(activas).toBe(1);
+    expect(envoltorio.activas).toEqual(
+      (await origen.activas()).map((a) => ({
+        juego: a.juego,
+        estampaId: a.estampa.id,
+        numeroVersion: 1,
+      })),
+    );
+  });
+
+  it('restaurar en una base vacía repone la misma activa, en la misma versión', async () => {
+    const origen = await repositorioConActivas();
+    const { archivo } = await ejecutarRespaldo(origen, opciones());
+    const { envoltorio } = await verificarRespaldo(archivo);
+    const destino = new InMemoryEstampaRepository();
+
+    await destino.importar(planificarImportacion(envoltorio), {
+      dryRun: false,
+    });
+    const resultado = await reponerActivas(
+      destino,
+      activasDeEnvoltorio(envoltorio),
+      { dryRun: false },
+    );
+
+    expect(resultado.repuestas).toHaveLength(1);
+    expect(await claveDeActivas(destino)).toEqual(await claveDeActivas(origen));
+  });
+
+  it('un respaldo viejo, sin el campo activas, sigue siendo válido y se restaura sin activas', async () => {
+    const origen = await repositorioConDatos();
+    const { archivo } = await ejecutarRespaldo(origen, opciones());
+    const { activas: _quitado, ...viejo } = (await verificarRespaldo(archivo))
+      .envoltorio;
+    const rutaVieja = join(directorio, 'viejo.json');
+    await writeFile(rutaVieja, JSON.stringify(viejo), 'utf8');
+
+    const leido = await verificarRespaldo(rutaVieja);
+    const destino = new InMemoryEstampaRepository();
+    await destino.importar(planificarImportacion(leido.envoltorio), {
+      dryRun: false,
+    });
+    const resultado = await reponerActivas(
+      destino,
+      activasDeEnvoltorio(leido.envoltorio),
+      { dryRun: false },
+    );
+
+    expect(leido.activas).toBe(0);
+    expect(resultado).toEqual({ repuestas: [], yaTenian: [], noRepuestas: [] });
+    expect(await destino.activas()).toEqual([]);
+  });
+
+  it('una activa que apunta a una versión que el respaldo no tiene lo vuelve inservible', async () => {
+    const origen = await repositorioConActivas();
+    const { archivo } = await ejecutarRespaldo(origen, opciones());
+    const { envoltorio } = await verificarRespaldo(archivo);
+    const roto = {
+      ...envoltorio,
+      activas: envoltorio.activas!.map((a) => ({ ...a, numeroVersion: 9 })),
+    };
+    const rutaRota = join(directorio, 'roto.json');
+    await writeFile(rutaRota, JSON.stringify(roto), 'utf8');
+
+    await expect(verificarRespaldo(rutaRota)).rejects.toThrow(
+      /no está en el respaldo/,
+    );
   });
 });

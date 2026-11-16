@@ -2,6 +2,7 @@ import { FORMATO_EXPORT, FORMATO_VERSION } from './constants.js';
 import { ImportacionInvalidaError } from './errors.js';
 import { envoltorioExportSchema } from './schema.js';
 import type {
+  ActivaExportada,
   DatosEstampa,
   DocumentoExportado,
   EnvoltorioExport,
@@ -137,4 +138,32 @@ export function planificarImportacion(
     },
   );
   return { estampas };
+}
+
+/**
+ * Las activas que lleva el envoltorio (ninguna si es un respaldo viejo sin el
+ * campo). Cada una debe apuntar a una estampa y versión del mismo envoltorio:
+ * una referencia colgante es un respaldo roto y falla antes de tocar la base.
+ */
+export function activasDeEnvoltorio(
+  envoltorio: EnvoltorioExport,
+): readonly ActivaExportada[] {
+  const activas = envoltorio.activas ?? [];
+  if (activas.length === 0) return activas;
+
+  const versionesPorId = new Map(
+    planificarImportacion(envoltorio).estampas.map((estampa) => [
+      estampa.id,
+      estampa.versiones.length,
+    ]),
+  );
+  activas.forEach(({ juego, estampaId, numeroVersion }) => {
+    const total = versionesPorId.get(estampaId);
+    if (total === undefined || numeroVersion > total) {
+      throw new ImportacionInvalidaError(
+        `La activa de "${juego}" apunta a la estampa ${estampaId} versión ${numeroVersion}, que no está en el respaldo.`,
+      );
+    }
+  });
+  return activas;
 }

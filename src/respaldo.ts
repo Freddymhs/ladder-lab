@@ -24,9 +24,10 @@ async function main(): Promise<number> {
   if (argumento === ARGUMENTO_VERIFICAR) {
     if (!ruta)
       throw new Error(`Uso: ${ARGUMENTO_VERIFICAR} <ruta del respaldo>`);
-    const { estampas, versiones, archivadas } = await verificarRespaldo(ruta);
+    const { estampas, versiones, archivadas, activas } =
+      await verificarRespaldo(ruta);
     logger.info(
-      { ruta, estampas, versiones, archivadas },
+      { ruta, estampas, versiones, archivadas, activas },
       'Respaldo verificado',
     );
     return CODIGO_SALIDA.OK;

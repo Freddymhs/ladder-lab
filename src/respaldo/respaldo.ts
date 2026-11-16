@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import type { EstampaRepository } from '@data/index.js';
 import {
   ImportacionInvalidaError,
+  activasDeEnvoltorio,
   construirEnvoltorio,
   planificarImportacion,
   validarEnvoltorio,
@@ -34,6 +35,8 @@ export interface ContenidoVerificado {
   readonly estampas: number;
   readonly versiones: number;
   readonly archivadas: number;
+  /** Estampas activas que lleva el respaldo (0 si es uno viejo sin el campo). */
+  readonly activas: number;
   readonly envoltorio: EnvoltorioExport;
 }
 
@@ -41,6 +44,7 @@ export interface ResumenRespaldo {
   readonly archivo: string;
   readonly estampas: number;
   readonly versiones: number;
+  readonly activas: number;
   readonly bytes: number;
   readonly sha256: string;
   readonly eliminados: readonly string[];
@@ -77,10 +81,12 @@ export async function verificarRespaldo(
 
   const envoltorio = validarEnvoltorio(entrada);
   const plan = planificarImportacion(envoltorio);
+  const activas = activasDeEnvoltorio(envoltorio);
   return {
     estampas: plan.estampas.length,
     versiones: envoltorio.estampas.length,
     archivadas: plan.estampas.filter((e) => e.archivada).length,
+    activas: activas.length,
     envoltorio,
   };
 }
@@ -108,9 +114,12 @@ export async function ejecutarRespaldo(
   await mkdir(opciones.directorio, { recursive: true });
 
   const anteriores = await respaldosExistentes(opciones.directorio);
+  // Las activas se leen ANTES que las estampas: así toda activa apunta a una
+  // versión que la lectura siguiente ya contiene (las versiones no se borran).
+  const activas = await repository.activas();
   const estampas = await repository.todas({ incluirVersiones: true });
   const contenido = JSON.stringify(
-    construirEnvoltorio(estampas, { incluirVersiones: true }),
+    construirEnvoltorio(estampas, { incluirVersiones: true, activas }),
     null,
     2,
   );
@@ -126,6 +135,12 @@ export async function ejecutarRespaldo(
       throw error;
     },
   );
+  if (escrito.activas !== activas.length) {
+    await rm(temporal, { force: true });
+    throw new Error(
+      `El respaldo escrito tiene ${escrito.activas} activas y se esperaban ${activas.length}`,
+    );
+  }
   if (escrito.versiones !== estampas.length) {
     await rm(temporal, { force: true });
     throw new Error(
@@ -153,6 +168,7 @@ export async function ejecutarRespaldo(
     archivo: destino,
     estampas: escrito.estampas,
     versiones: escrito.versiones,
+    activas: escrito.activas,
     bytes: Buffer.byteLength(contenido, 'utf8'),
     sha256: createHash('sha256').update(contenido).digest('hex'),
     eliminados: sobrantes,

@@ -284,11 +284,25 @@ export const documentoExportadoSchema = datosBaseSchema
   .superRefine(exigirEtapaOFecha);
 export type DocumentoExportado = z.infer<typeof documentoExportadoSchema>;
 
+/**
+ * La estampa activa de un juego: una elección de uso, aparte de las versiones
+ * (que son inmutables). Solo el respaldo la lleva; es opcional en el envoltorio.
+ */
+export const activaExportadaSchema = z
+  .object({
+    juego: z.string().min(1),
+    estampaId: z.string().uuid(),
+    numeroVersion: z.number().int().positive(),
+  })
+  .strict();
+export type ActivaExportada = z.infer<typeof activaExportadaSchema>;
+
 export const envoltorioExportSchema = z
   .object({
     formato: z.literal(FORMATO_EXPORT),
     version: z.literal(FORMATO_VERSION),
     estampas: z.array(documentoExportadoSchema),
+    activas: z.array(activaExportadaSchema).optional(),
   })
   .strict();
 export type EnvoltorioExport = z.infer<typeof envoltorioExportSchema>;

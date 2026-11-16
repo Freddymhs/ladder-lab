@@ -3,13 +3,28 @@ import {
   FORMATO_EXPORT,
   FORMATO_VERSION,
 } from './constants.js';
-import type { EstampaGuardada } from './model.js';
+import type { EstampaActiva, EstampaGuardada } from './model.js';
 import { documentoExportadoSchema, envoltorioExportSchema } from './schema.js';
-import type { DocumentoExportado, EnvoltorioExport } from './schema.js';
+import type {
+  ActivaExportada,
+  DocumentoExportado,
+  EnvoltorioExport,
+} from './schema.js';
 
 export interface OpcionesExportacion {
   readonly incluirVersiones: boolean;
+  /**
+   * Las activas de hoy. Si se pasa (aunque sea vacío) el envoltorio lleva
+   * `activas`; si no, el campo no aparece.
+   */
+  readonly activas?: readonly EstampaActiva[];
 }
+
+const aActivaExportada = (activa: EstampaActiva): ActivaExportada => ({
+  juego: activa.juego,
+  estampaId: activa.estampa.id,
+  numeroVersion: activa.estampa.numeroVersion,
+});
 
 /**
  * Documento exportado = datos + id (siempre). `numeroVersion` solo con
@@ -37,6 +52,9 @@ export function construirEnvoltorio(
     formato: FORMATO_EXPORT,
     version: FORMATO_VERSION,
     estampas: estampas.map((estampa) => aDocumentoExportado(estampa, opciones)),
+    ...(opciones.activas && {
+      activas: opciones.activas.map(aActivaExportada),
+    }),
   });
 }
 

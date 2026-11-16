@@ -15,6 +15,7 @@ import {
   datosValidos,
 } from '../../tools/__tests__/harness.js';
 import type { EstampaRepository } from '../estampa.repository.js';
+import { reponerActivas } from '../reponer-activas.js';
 
 const LISTADO = {
   incluirArchivadas: false,
@@ -748,6 +749,71 @@ export function describirContratoDeRepositorio(
             [juegoB, b.id],
           ].sort(),
         );
+      });
+    });
+
+    describe('reponer activas de un respaldo', () => {
+      it('repone la activa fijada a su versión, no pisa la de un juego que ya tiene y informa la rechazada', async () => {
+        const repo = await nuevo();
+        const juegoLibre = juegoUnico();
+        const juegoOcupado = juegoUnico();
+        const juegoArchivado = juegoUnico();
+        const libre = await repo.crear(conJuego(datosValidos(), juegoLibre));
+        await repo.corregir(libre.id, 1, {
+          ...conJuego(datosValidos(), juegoLibre),
+          notas: 'v2',
+        });
+        const ocupada = await repo.crear(
+          conJuego(datosValidos(), juegoOcupado),
+        );
+        const otra = await repo.crear(conJuego(datosValidos(), juegoOcupado));
+        await repo.marcarActiva(ocupada.id);
+        const archivada = await repo.crear(
+          conJuego(datosValidos(), juegoArchivado),
+        );
+        await repo.archivar(archivada.id);
+
+        const resultado = await reponerActivas(
+          repo,
+          [
+            { juego: juegoLibre, estampaId: libre.id, numeroVersion: 1 },
+            { juego: juegoOcupado, estampaId: otra.id, numeroVersion: 1 },
+            {
+              juego: juegoArchivado,
+              estampaId: archivada.id,
+              numeroVersion: 1,
+            },
+          ],
+          { dryRun: false },
+        );
+
+        expect(resultado.repuestas).toEqual([juegoLibre]);
+        expect(resultado.yaTenian).toEqual([juegoOcupado]);
+        expect(resultado.noRepuestas.map((x) => x.juego)).toEqual([
+          juegoArchivado,
+        ]);
+        const repuesta = await repo.activaDe(juegoLibre);
+        expect(repuesta?.estampa.id).toBe(libre.id);
+        expect(repuesta?.estampa.numeroVersion).toBe(1);
+        expect((await repo.activaDe(juegoOcupado))?.estampa.id).toBe(
+          ocupada.id,
+        );
+        expect(await repo.activaDe(juegoArchivado)).toBeNull();
+      });
+
+      it('con dryRun informa lo que repondría y no escribe nada', async () => {
+        const repo = await nuevo();
+        const juego = juegoUnico();
+        const { id } = await repo.crear(conJuego(datosValidos(), juego));
+
+        const resultado = await reponerActivas(
+          repo,
+          [{ juego, estampaId: id, numeroVersion: 1 }],
+          { dryRun: true },
+        );
+
+        expect(resultado.repuestas).toEqual([juego]);
+        expect(await repo.activaDe(juego)).toBeNull();
       });
     });
 

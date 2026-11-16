@@ -4,8 +4,12 @@ import { logger } from '@common/logger.js';
 import {
   SupabaseEstampaRepository,
   crearClienteSupabase,
+  reponerActivas,
 } from '@data/index.js';
-import { planificarImportacion } from '@domain/estampa/index.js';
+import {
+  activasDeEnvoltorio,
+  planificarImportacion,
+} from '@domain/estampa/index.js';
 import { CODIGO_SALIDA, verificarRespaldo } from './respaldo/index.js';
 
 const ARGUMENTO_APLICAR = '--aplicar';
@@ -15,7 +19,8 @@ const ARGUMENTO_APLICAR = '--aplicar';
  *   node dist/restaurar.js <ruta>              SIMULA: verifica el respaldo y dice qué entraría
  *   node dist/restaurar.js <ruta> --aplicar    restaura de verdad
  * Es la misma lógica que la herramienta importar_json, sin pasar el JSON por el chat.
- * Los ids existentes se omiten: nunca se sobrescribe nada.
+ * Los ids existentes se omiten: nunca se sobrescribe nada. Si el respaldo lleva
+ * las estampas activas, se reponen las de los juegos que aún no tienen una.
  */
 async function main(): Promise<number> {
   const [ruta, bandera] = process.argv.slice(2);
@@ -39,8 +44,14 @@ async function main(): Promise<number> {
     { dryRun },
   );
 
+  const activas = await reponerActivas(
+    repository,
+    activasDeEnvoltorio(envoltorio),
+    { dryRun },
+  );
+
   logger.info(
-    { ruta, enElRespaldo: { estampas, versiones }, ...resultado },
+    { ruta, enElRespaldo: { estampas, versiones }, ...resultado, activas },
     dryRun
       ? 'Simulación de restauración (no se escribió nada)'
       : 'Restauración aplicada',

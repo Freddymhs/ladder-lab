@@ -46,7 +46,7 @@ Freddy marca **una** estampa por juego como la que usa hoy; `/gameconfig:run-rts
 - **Archivar la activa deja el juego sin activa** sin borrar nada: la fila queda y la vista `estampas_activas_detalle` no la muestra. `service_role` tiene `SELECT`, `INSERT` y `UPDATE` sobre la tabla, sin `DELETE` ni `TRUNCATE`.
 - **Activa no es match perfecto**: match perfecto es una marca de calidad del resultado dentro del documento (puede haber muchas); la activa es una elección de uso (una por juego) y nunca se deduce de la versión ni del match.
 - `juegos_registrados` (nombres en uso) permite sugerir «StarCraft II» cuando se pide «Starcraft 2».
-- **Pendiente:** el respaldo JSON (`exportar`, `pnpm respaldo`) no lleva la elección de activas; `pg_dump` sí. La estampa no tiene campo «nombre»: los listados usan `juego.etapa` como rótulo.
+- **Respaldo (2026-11-16):** `pnpm respaldo` lleva las activas en el campo opcional `activas` del envoltorio (`{juego, estampaId, numeroVersion}`); `exportar` no. Al restaurar (`pnpm restaurar`, `importar_json`) se reponen con `activaDe` + `marcarActiva` solo en juegos sin activa (nunca se pisa una elección). Un respaldo viejo sin el campo sigue siendo válido. Lo que el respaldo no lleva: cuándo se eligió (`elegidaEn` queda con la hora de la restauración). La estampa no tiene campo «nombre»: los listados usan `juego.etapa` como rótulo.
 
 ## Seguridad
 

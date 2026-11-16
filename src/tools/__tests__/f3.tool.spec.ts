@@ -168,6 +168,36 @@ describe('importar_json', () => {
     ).toBe(true);
   });
 
+  it('un envoltorio con activas las repone al aplicar; en simulación no escribe; sin el campo no falla', async () => {
+    const envoltorio = clonar(
+      leerEjemplo('export-vigentes.json'),
+    ) as Envoltorio & { activas?: unknown[] };
+    const [primera] = envoltorio.estampas;
+    const juego = (primera!.juego as { nombre: string }).nombre;
+    envoltorio.activas = [{ juego, estampaId: primera!.id, numeroVersion: 1 }];
+    const activaDeHoy = async () =>
+      jsonDe<{ activa: unknown }>(await llamar('activa_por_juego', { juego }))
+        .activa;
+
+    const simulada = jsonDe<{ activas: { repuestas: string[] } }>(
+      await llamar('importar_json', { envoltorio }),
+    );
+    expect(simulada.activas.repuestas).toEqual([juego]);
+    expect(await activaDeHoy()).toBeFalsy();
+
+    const aplicada = jsonDe<{ activas: { repuestas: string[] } }>(
+      await llamar('importar_json', { envoltorio, dryRun: false }),
+    );
+    expect(aplicada.activas.repuestas).toEqual([juego]);
+    expect(await activaDeHoy()).toBeTruthy();
+
+    const { activas: _sinCampo, ...viejo } = envoltorio;
+    const sinActivas = jsonDe<{ activas: { repuestas: string[] } }>(
+      await llamar('importar_json', { envoltorio: viejo, dryRun: false }),
+    );
+    expect(sinActivas.activas.repuestas).toEqual([]);
+  });
+
   it('importar de nuevo omite lo existente y no cambia nada', async () => {
     const envoltorio = leerEjemplo('export-vigentes.json') as Record<
       string,

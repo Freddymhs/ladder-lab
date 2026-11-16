@@ -52,7 +52,48 @@ Estado: v1, **no congelado** hasta que Freddy lo marque con datos reales (`docs/
 - **Todo documento exportado lleva `id`** (uuid). Con él se cita la estampa de origen: `derivadaDe` es el `id` de otra estampa y se resuelve contra los `id` del mismo envoltorio.
 - Sin `incluirVersiones` se exporta **solo la versión vigente** de cada estampa. Con `incluirVersiones` la misma estampa se repite una vez por versión y cada documento lleva `numeroVersion` (1, 2, 3… sin saltos).
 - La exportación incluye también las **estampas archivadas**, marcadas con `archivada: true`. Una estampa no archivada no lleva el campo.
+- **`activas` (opcional, solo el respaldo `pnpm respaldo`)**: qué estampa está activa en cada juego, una elección de uso aparte de las versiones. Cada elemento es `{ "juego", "estampaId", "numeroVersion" }` y debe apuntar a una estampa y versión del mismo envoltorio. Un envoltorio sin el campo (`exportar`, respaldos anteriores) es válido: significa «no se sabe», no «ninguna». Al restaurar se reponen solo las de juegos que aún no tienen activa.
 - Un documento suelto (sin envoltorio) es el mismo objeto con `"formato": "ladder-lab.estampa"` y **sin** `id`: es lo que recibe `crear_estampa`.
+
+Ejemplo del campo `activas` (la versión 1 de la estampa queda fijada como la activa de su juego):
+
+```json
+{
+  "formato": "ladder-lab.export",
+  "version": 1,
+  "estampas": [
+    {
+      "formato": "ladder-lab.estampa",
+      "version": 1,
+      "id": "7d1c2f4e-0000-4000-8000-000000000001",
+      "numeroVersion": 1,
+      "juego": {
+        "nombre": "Counter-Strike",
+        "genero": "FPS",
+        "fecha": "2025-06-01"
+      },
+      "sistema": {
+        "mouse": "Marca Modelo",
+        "dpi": 450,
+        "polling": 1000,
+        "resolucion": "1920x1080",
+        "hz": 240,
+        "punteroWindows": 10,
+        "aceleracionWindows": "apagada"
+      },
+      "enJuego": { "sensibilidad": 1.8, "rawInput": "encendido" },
+      "resultado": { "rango": "Global", "certeza": "medido" }
+    }
+  ],
+  "activas": [
+    {
+      "juego": "Counter-Strike",
+      "estampaId": "7d1c2f4e-0000-4000-8000-000000000001",
+      "numeroVersion": 1
+    }
+  ]
+}
+```
 
 ## Campos
 
