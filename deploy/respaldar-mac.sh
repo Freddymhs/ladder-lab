@@ -7,7 +7,7 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 RAIZ="${LAB_RESPALDOS:-$HOME/respaldos}"
 ENTORNO="$HOME/.config/lab/ladder-lab.env"
 PUSH="$HOME/.config/lab/kuma-push-url"
-SENS_URL="${SENS_URL:-http://127.0.0.1:3012/candidatas/exportar}"
+SENS_BASE="${SENS_BASE:-http://127.0.0.1:3012}"
 RETENCION_DIAS=30
 RED=lab_default
 
@@ -23,13 +23,20 @@ if [ "$codigo" -ne 0 ]; then
   fallos=1
 fi
 
-destino="$RAIZ/sens-lab/candidatas-$(date -u +%Y%m%dT%H%M%SZ).json"
-if ! curl -fsS -m 60 -o "$destino" "$SENS_URL"; then
-  echo "sens-lab: falló la descarga"
-  rm -f "$destino"
-  fallos=1
-fi
-find "$RAIZ/sens-lab" -name 'candidatas-*.json' -mtime +"$RETENCION_DIAS" -delete
+# Baja una exportación de sens-lab a $RAIZ/sens-lab/<nombre>-<fecha>.json y poda las viejas.
+respaldar_sens_lab() {
+  local nombre="$1" ruta="$2"
+  local destino="$RAIZ/sens-lab/$nombre-$(date -u +%Y%m%dT%H%M%SZ).json"
+  if ! curl -fsS -m 60 -o "$destino" "$SENS_BASE/$ruta"; then
+    echo "sens-lab $nombre: falló la descarga"
+    rm -f "$destino"
+    fallos=1
+  fi
+  find "$RAIZ/sens-lab" -name "$nombre-*.json" -mtime +"$RETENCION_DIAS" -delete
+}
+
+respaldar_sens_lab candidatas candidatas/exportar
+respaldar_sens_lab calibraciones calibraciones/exportar
 
 if [ "$fallos" -eq 0 ] && [ -f "$PUSH" ]; then
   curl -fsS -m 15 -o /dev/null "$(cat "$PUSH")?status=up&msg=OK"
