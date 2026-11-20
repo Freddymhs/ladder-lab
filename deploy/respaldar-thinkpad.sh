@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copia fuera del Mac y de Neon (systemd --user, con recuperación si el ThinkPad
+# Copia fuera del Mac y de Neon, y una foto diaria de la bóveda de notas (systemd --user, con recuperación si el ThinkPad
 # estuvo apagado). Sin --delete: la poda del Mac no debe vaciar esta copia.
 set -uo pipefail
 
@@ -26,6 +26,18 @@ else
   fallos=1
 fi
 find "$RAIZ/pg_dump" -name 'lab-*.dump' -mtime +"$RETENCION_DIAS" -delete
+
+# La bóveda de notas vive solo en el Mac (sin git ni Time Machine): una foto fechada por día.
+mkdir -p "$RAIZ/boveda"
+foto="$RAIZ/boveda/boveda-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+if ssh -o ConnectTimeout=15 -o BatchMode=yes mac-mini 'COPYFILE_DISABLE=1 tar --no-xattrs -C "$HOME" -czf - boveda' > "$foto" && [ -s "$foto" ]; then
+  echo "boveda: $(wc -c < "$foto") bytes"
+else
+  echo "boveda: falló"
+  rm -f "$foto"
+  fallos=1
+fi
+find "$RAIZ/boveda" -name 'boveda-*.tar.gz' -mtime +"$RETENCION_DIAS" -delete
 
 echo "$(date -u +%FT%TZ) copia terminada, fallos=$fallos"
 exit "$fallos"
